@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Retro-XP Charakter</title>
+<style>
+  :root {
+    --face: #c0c0c0; --hi: #ffffff; --lo: #808080; --dk: #000000;
+    --title: #000080; --title2: #1084d0; --desk: #008080;
+    --hp: #a00000; --xp: #000080;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; background: var(--desk);
+    font-family: "MS Sans Serif", Tahoma, Geneva, Verdana, sans-serif; font-size: 13px;
+    display: flex; align-items: center; justify-content: center; padding: 16px;
+  }
+  .win {
+    width: 100%; max-width: 640px; background: var(--face); padding: 3px;
+    border: 2px solid; border-color: var(--hi) var(--dk) var(--dk) var(--hi);
+    box-shadow: inset 1px 1px 0 #dfdfdf, inset -1px -1px 0 var(--lo);
+  }
+  .titlebar {
+    background: linear-gradient(90deg, var(--title), var(--title2));
+    color: #fff; font-weight: bold; padding: 3px 4px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .tb-btns { display: flex; gap: 2px; }
+  .tb-btns span {
+    width: 18px; height: 16px; background: var(--face); color: #000;
+    display: grid; place-items: center; font-size: 11px; font-weight: bold;
+    border: 1px solid; border-color: var(--hi) var(--dk) var(--dk) var(--hi);
+  }
+  .body { padding: 10px; display: grid; gap: 10px; }
+  .sunken {
+    border: 2px solid; border-color: var(--lo) var(--hi) var(--hi) var(--lo);
+    box-shadow: inset 1px 1px 0 var(--dk);
+  }
+  fieldset {
+    margin: 0; padding: 10px 8px 8px; border: 1px solid var(--lo);
+    box-shadow: 1px 1px 0 var(--hi), inset 1px 1px 0 var(--hi);
+  }
+  legend { padding: 0 3px; }
+
+  /* Kopfbereich */
+  .head { display: grid; grid-template-columns: 96px 1fr; gap: 10px; }
+  .portrait { width: 96px; height: 96px; background: #2a2a40; display: grid; place-items: center; }
+  .portrait svg { width: 80px; height: 80px; image-rendering: pixelated; }
+  .name { font-size: 16px; font-weight: bold; }
+  .sub { color: #333; margin-bottom: 6px; }
+  .barrow { display: grid; grid-template-columns: 34px 1fr; align-items: center; gap: 6px; margin-top: 5px; }
+  .bar { height: 20px; background: #fff; position: relative; }
+  .fill { height: 100%; }
+  .bar b { position: absolute; inset: 0; display: grid; place-items: center; font-weight: normal; mix-blend-mode: difference; color: #fff; }
+  .hp .fill { background: var(--hp); width: 72%; }
+  .xp { background: var(--face); padding: 2px; display: flex; gap: 2px; }
+  .xp i { flex: 1; background: var(--xp); }
+  .xp i.off { background: transparent; }
+
+  /* Mitte */
+  .mid { display: grid; grid-template-columns: 170px 1fr; gap: 10px; }
+  .stat { display: grid; grid-template-columns: 1fr 40px 22px; align-items: center; gap: 4px; margin: 5px 0; }
+  .stat .v { background: #fff; text-align: right; padding: 2px 4px; }
+  .free { margin-top: 8px; color: #333; }
+  .inv { display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px; }
+  .slot { aspect-ratio: 1; background: #a8a8a8; display: grid; place-items: center; font-size: 20px; }
+  .slot:hover { outline: 1px dotted #000; }
+  .invinfo { display: flex; justify-content: space-between; margin-top: 6px; color: #333; }
+
+  /* Buttons */
+  .btn {
+    background: var(--face); font: inherit; padding: 4px 6px; cursor: pointer;
+    border: 2px solid; border-color: var(--hi) var(--dk) var(--dk) var(--hi);
+    box-shadow: inset -1px -1px 0 var(--lo), inset 1px 1px 0 #dfdfdf;
+  }
+  .btn:active { border-color: var(--dk) var(--hi) var(--hi) var(--dk); box-shadow: inset 1px 1px 0 var(--lo); }
+  .plus { padding: 0; width: 22px; height: 22px; line-height: 1; }
+  .bar6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+  .bar6 .btn { height: 36px; }
+  .status { display: flex; gap: 3px; }
+  .status div { flex: 1; padding: 2px 4px; }
+
+  @media (max-width: 520px) {
+    .mid { grid-template-columns: 1fr; }
+    .bar6 { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="win">
+  <div class="titlebar"><span>🗡 Charakter - Aldric.exe</span><div class="tb-btns"><span>_</span><span>□</span><span>✕</span></div></div>
+  <div class="body">
+
+    <!-- Oben links: Portrait + Name/Level/Bars -->
+    <div class="head">
+      <div class="portrait sunken">
+        <svg viewBox="0 0 16 16" shape-rendering="crispEdges">
+          <rect x="4" y="2" width="8" height="3" fill="#6b3f1f"/>
+          <rect x="4" y="5" width="8" height="6" fill="#e0b090"/>
+          <rect x="5" y="7" width="2" height="1" fill="#000"/><rect x="9" y="7" width="2" height="1" fill="#000"/>
+          <rect x="6" y="9" width="4" height="1" fill="#8a4a3a"/>
+          <rect x="3" y="11" width="10" height="5" fill="#3050a0"/>
+          <rect x="7" y="11" width="2" height="5" fill="#c0c0c0"/>
+        </svg>
+      </div>
+      <div>
+        <div class="name">Aldric</div>
+        <div class="sub">Level 7</div>
+        <div class="barrow"><span>HP</span><div class="bar sunken hp"><div class="fill"></div><b>72 / 100</b></div></div>
+        <div class="barrow"><span>XP</span><div class="bar sunken xp" title="1340 / 2000 XP">
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="off"></i><i class="off"></i><i class="off"></i></div></div>
+      </div>
+    </div>
+
+    <div class="mid">
+      <fieldset>
+        <legend>Attribute</legend>
+        <div class="stat"><span>Stärke</span><span class="v sunken">14</span><button class="btn plus">+</button></div>
+        <div class="stat"><span>Geschick</span><span class="v sunken">11</span><button class="btn plus">+</button></div>
+        <div class="stat"><span>Intelligenz</span><span class="v sunken">8</span><button class="btn plus">+</button></div>
+        <div class="stat"><span>Vitalität</span><span class="v sunken">12</span><button class="btn plus">+</button></div>
+        <div class="free">Freie Punkte: 3</div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Inventar</legend>
+        <div class="inv" id="inv"></div>
+        <div class="invinfo"><span>Gold: 245</span><span>12 / 30 Plätze</span></div>
+      </fieldset>
+    </div>
+
+    <div class="bar6">
+      <button class="btn">Knopf 1</button><button class="btn">Knopf 2</button><button class="btn">Knopf 3</button>
+      <button class="btn">Knopf 4</button><button class="btn">Knopf 5</button><button class="btn">Knopf 6</button>
+    </div>
+
+    <div class="status"><div class="sunken">Bereit</div><div class="sunken">Tag 1, 08:00</div></div>
+  </div>
+</div>
+<script>
+  const items = ["🗡","🛡","🧪","🧪","🍞","🗝","📜","💍","🏹","🪙","🦴","🧭"];
+  const inv = document.getElementById("inv");
+  for (let i = 0; i < 30; i++) {
+    const s = document.createElement("div");
+    s.className = "slot sunken";
+    s.textContent = items[i] || "";
+    inv.appendChild(s);
+  }
+</script>
+</body>
+</html>
