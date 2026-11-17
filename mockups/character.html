@@ -69,7 +69,7 @@
   /* Kopf */
   .head { flex: none; display: grid; grid-template-columns: 104px 1fr; gap: 8px; }
   .portrait { width: 104px; height: 104px; background: #0a0705; }
-  .portrait img { width: 100%; height: 100%; image-rendering: pixelated; display: block; }
+  .portrait img { width: 100%; height: 100%; display: block; object-fit: cover; }
   .portrait { box-shadow: inset 1px 1px 0 #000, 0 0 10px var(--class); }
   .nameline { display: flex; justify-content: space-between; align-items: baseline; }
   .name { font-size: 18px; font-weight: 800; color: var(--gold); text-shadow: 1px 1px 0 #000; }
@@ -142,7 +142,7 @@
 
     <div class="head">
       <div class="portrait sunken">
-        <img src="assets/mage_96.png" alt="Portrait">
+        <img src="assets/mage_real.png" alt="Portrait">
       </div>
       <div>
         <div class="nameline"><span class="name gothic">Ysolde</span><span class="lvl gothic">Stufe 7</span></div>
