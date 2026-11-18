@@ -207,7 +207,7 @@ const Sound = (()=>{
 const Logic = {
   create(mode){
     return {
-      mode, over:false, winner:-1, active:0, round:1, steps:2, skillUsed:false,
+      mode, over:false, winner:-1, active:0, round:1, steps:2, used:{tp:false,nova:false,ice:false},
       units:[
         {id:0,name:"Frost-Krieger",x:1,y:4,hp:100,frozen:false,cd:{tp:0,nova:0},fresh:{tp:false,nova:false}},
         {id:1,name:"Abgrund-Dämon",x:3,y:0,hp:100,frozen:false,cd:{tp:0,nova:0},fresh:{tp:false,nova:false}}
@@ -222,7 +222,7 @@ const Logic = {
     return r;
   },
   tpTargets(s){
-    const u=this.me(s), r=[]; if(s.skillUsed||u.cd.tp>0) return r;
+    const u=this.me(s), r=[]; if(s.used.tp||u.cd.tp>0) return r;
     for(let x=0;x<N;x++)for(let y=0;y<N;y++){const d=cheb(u,{x,y}); if(d>=1&&d<=SK.tp.range&&!this.occupied(s,x,y))r.push({x,y});}
     return r;
   },
@@ -233,7 +233,7 @@ const Logic = {
   },
   novaHits(s){return cheb(this.me(s),this.foe(s))<=SK.nova.radius;},
   iceTargets(s){
-    const u=this.me(s), r=[]; if(s.skillUsed) return r;
+    const u=this.me(s), r=[]; if(s.used.ice) return r;
     for(const [dx,dy] of DIRS)for(let k=1;k<=SK.ice.range;k++){const x=u.x+dx*k,y=u.y+dy*k; if(!inB(x,y))break; r.push({x,y});}
     return r;
   },
@@ -250,12 +250,12 @@ const Logic = {
   move(s,x,y){ if(s.over||!this.has(this.moveTargets(s),x,y))return null;
     const u=this.me(s), from={x:u.x,y:u.y}; u.x=x;u.y=y; s.steps--; return {from}; },
   teleport(s,x,y){ if(s.over||!this.has(this.tpTargets(s),x,y))return null;
-    const u=this.me(s), from={x:u.x,y:u.y}; u.x=x;u.y=y; s.skillUsed=true; u.cd.tp=SK.tp.cd; u.fresh.tp=true; return {from}; },
-  nova(s){ const u=this.me(s); if(s.over||s.skillUsed||u.cd.nova>0||!this.novaHits(s))return null;
-    const f=this.foe(s); s.skillUsed=true; u.cd.nova=SK.nova.cd; u.fresh.nova=true;
+    const u=this.me(s), from={x:u.x,y:u.y}; u.x=x;u.y=y; s.used.tp=true; u.cd.tp=SK.tp.cd; u.fresh.tp=true; return {from}; },
+  nova(s){ const u=this.me(s); if(s.over||s.used.nova||u.cd.nova>0||!this.novaHits(s))return null;
+    const f=this.foe(s); s.used.nova=true; u.cd.nova=SK.nova.cd; u.fresh.nova=true;
     this.damage(s,f,SK.nova.dmg); if(f.hp>0)f.frozen=true; return {hit:true}; },
   ice(s,x,y){ if(s.over||!this.has(this.iceTargets(s),x,y))return null;
-    const tr=this.iceTrace(s,x,y); s.skillUsed=true; if(tr.hit)this.damage(s,this.foe(s),SK.ice.dmg); return tr; },
+    const tr=this.iceTrace(s,x,y); s.used.ice=true; if(tr.hit)this.damage(s,this.foe(s),SK.ice.dmg); return tr; },
   // central cooldown tick: at end of the owner's turn, skip skills used this turn
   tickCooldowns(u){ for(const k of ["tp","nova"]){ if(u.fresh[k]) u.fresh[k]=false; else if(u.cd[k]>0) u.cd[k]--; } },
   endTurn(s){
@@ -264,10 +264,13 @@ const Logic = {
     if(u.frozen && s._skipping){ u.frozen=false; }
     s._skipping=false;
     s.active=1-s.active; if(s.active===0) s.round++;
-    s.steps=2; s.skillUsed=false;
-    if(this.me(s).frozen){ s._skipping=true; s.steps=0; s.skillUsed=true; }
+    s.steps=2; s.used={tp:false,nova:false,ice:false};
+    if(this.me(s).frozen){ s._skipping=true; s.steps=0; s.used={tp:true,nova:true,ice:true}; }
   },
-  turnExhausted(s){ return s.steps===0 && s.skillUsed; }
+  skillReady(s,k){ const u=this.me(s); if(s.used[k]) return false; if(k==="ice") return true; if(u.cd[k]>0) return false;
+    if(k==="nova") return this.novaHits(s)||this.skillReady(s,"tp"); return this.tpTargets(s).length>0; },
+  // turn is over when no step and no usable skill remains
+  turnExhausted(s){ return s.steps===0 && !["tp","nova","ice"].some(k=>this.skillReady(s,k)); }
 };
 
 /* =========================================================
@@ -311,27 +314,30 @@ const AI = {
     if((me.x===0||me.x===N-1)&&(me.y===0||me.y===N-1)) sc-=2;
     return sc;
   },
+  // attacks that hit from position u (each skill at most once per turn)
+  attacks(s,u,used){ const f=Logic.foe(s), r=[];
+    if(!used.ice&&this.aligned(u,f,4)) r.push({type:"ice",x:f.x,y:f.y});
+    if(!used.nova&&u.cd.nova===0&&cheb(u,f)<=SK.nova.radius) r.push({type:"nova"});
+    return r; },
   plan(s){
     const best={score:-1e9,plan:null};
     const consider=(score,plan)=>{if(score>best.score){best.score=score;best.plan=plan;}};
-    const me0=Logic.me(s);
+    const dmgOf=list=>list.reduce((d,k)=>d+(k.type==="ice"?SK.ice.dmg:k.type==="nova"?SK.nova.dmg:0),0);
     for(const pre of this.reach(s,s.steps)){
       const s1=this.clone(s); const u1=Logic.me(s1); u1.x=pre.x;u1.y=pre.y; s1.steps-=pre.path.length;
-      const opts=[{type:"none"}];
-      if(!s1.skillUsed){
-        const f=Logic.foe(s1);
-        if(this.aligned(u1,f,4)) opts.push({type:"ice",x:f.x,y:f.y});
-        if(u1.cd.nova===0&&Logic.novaHits(s1)) opts.push({type:"nova"});
-        if(u1.cd.tp===0) for(const t of Logic.tpTargets(s1)) opts.push({type:"tp",x:t.x,y:t.y});
-      }
-      for(const o of opts){
-        const s2=this.clone(s1); const u2=Logic.me(s2); let dmg=0,froze=false;
-        if(o.type==="ice"){dmg=25;} else if(o.type==="nova"){dmg=15;froze=true;} else if(o.type==="tp"){u2.x=o.x;u2.y=o.y;}
+      const used={...s1.used};
+      const atkA=this.attacks(s1,u1,used); atkA.forEach(k=>used[k.type]=true);
+      const tps=[null]; if(!used.tp&&u1.cd.tp===0) for(const t of Logic.tpTargets(s1)) tps.push(t);
+      for(const t of tps){
+        const s2=this.clone(s1); const u2=Logic.me(s2); if(t){u2.x=t.x;u2.y=t.y;}
+        const atkB=t?this.attacks(s2,u2,used):[];
+        const skills=[...atkA,...(t?[{type:"tp",x:t.x,y:t.y}]:[]),...atkB];
+        const dmg=dmgOf(skills), froze=skills.some(k=>k.type==="nova");
         for(const post of this.reach(s2,s2.steps)){
           const fin={x:post.x,y:post.y,hp:u2.hp};
-          let sc=this.evaluate(s2,fin,dmg,froze&&Logic.foe(s2).hp-dmg>0,o.type==="tp");
-          sc-= (pre.path.length+post.path.length)*0.15; // prefer economy on ties
-          consider(sc,{pre:pre.path,skill:o,post:post.path});
+          let sc=this.evaluate(s2,fin,dmg,froze&&Logic.foe(s2).hp-dmg>0,!!t&&atkB.length===0);
+          sc-=(pre.path.length+post.path.length)*0.15;
+          consider(sc,{pre:pre.path,skills,post:post.path});
         }
       }
     }
@@ -597,7 +603,7 @@ const Game = {
     const can=this.canAct();
     document.querySelectorAll(".sk").forEach(b=>{const k=b.dataset.sk;const cd=k==="ice"?0:me.cd[k];
       b.classList.toggle("oncd",cd>0); b.querySelector(".cd").textContent=cd>0?cd:"";
-      b.disabled=!can||s.skillUsed||cd>0; b.classList.toggle("sel",this.ui.mode===k&&can);});
+      b.disabled=!can||s.used[k]||cd>0; b.classList.toggle("sel",this.ui.mode===k&&can);});
     $("#moveBtn").disabled=!can||s.steps===0; $("#moveBtn").classList.toggle("sel",this.ui.mode==="move"&&can&&s.steps>0);
     $("#endBtn").disabled=!can;
     $("#modeBtn").textContent="MODUS: "+(this.mode==="ai"?"KI":"2P");
@@ -605,7 +611,7 @@ const Game = {
   selectMode(m){
     if(!this.canAct())return; const s=this.s,me=Logic.me(s);
     if(m==="move"&&s.steps===0) return this.invalid("Keine Schritte mehr.");
-    if(m!=="move"&&s.skillUsed) return this.invalid("Skill bereits eingesetzt.");
+    if(m!=="move"&&s.used[m]) return this.invalid("In diesem Zug schon eingesetzt.");
     if((m==="tp"||m==="nova")&&me.cd[m]>0) return this.invalid("Abklingzeit: "+me.cd[m]+" Züge.");
     Sound.fx.click(); this.ui.mode=this.ui.mode===m?null:m;
     if(this.ui.mode==="nova"&&!Logic.novaHits(s)) this.toast("Gegner außer Reichweite (2).");
@@ -622,14 +628,13 @@ const Game = {
       case "ice": return this.doIce(x,y);
       default:
         if(Logic.has(Logic.moveTargets(s),x,y)){this.ui.mode="move";return this.doMove(x,y);}
-        if(x===f.x&&y===f.y&&!s.skillUsed&&Logic.has(Logic.iceTargets(s),x,y)){this.ui.mode="ice";this.refresh();return;}
+        if(x===f.x&&y===f.y&&!s.used.ice&&Logic.has(Logic.iceTargets(s),x,y)){this.ui.mode="ice";this.refresh();return;}
         this.invalid("Wähle eine Aktion.",x,y);
     }
   },
   async run(fn){ this.busy=true; this.refresh(); const tok=this.turnToken; try{ await fn(); } finally { if(tok===this.turnToken){ this.busy=false; this.afterAction(); } } },
   async doMove(x,y,ai){ const s=this.s, id=s.active, r=Logic.move(s,x,y);
     if(!r) return ai?false:this.invalid(s.steps===0?"Keine Schritte mehr.":"Ungültiges Feld.",x,y);
-    if(!ai&&s.steps===0) this.ui.mode=s.skillUsed?null:null;
     await (ai?Anim.move(id,r.from,{x,y}):this.run(()=>Anim.move(id,r.from,{x,y}))); return true; },
   async doTeleport(x,y,ai){ const s=this.s,id=s.active,r=Logic.teleport(s,x,y);
     if(!r) return ai?false:this.invalid("Ungültiges Teleportziel.",x,y);
@@ -659,8 +664,7 @@ const Game = {
     if(s.over) return this.finish();
     if(this.humanTurn()){
       if(this.ui.mode==="move"&&s.steps===0) this.ui.mode=null;
-      if(Logic.turnExhausted(s)||(s.steps===0&&s.skillUsed===false&&false)) { this.busy=true; this.refresh(); const tok=this.turnToken; setTimeout(()=>{ if(tok===this.turnToken){this.busy=false;this.endTurn();} },450); }
-      else if(s.steps===0&&Logic.moveTargets({...s,steps:1}).length===0&&s.skillUsed){ this.endTurn(); }
+      if(Logic.turnExhausted(s)) { this.busy=true; this.refresh(); const tok=this.turnToken; setTimeout(()=>{ if(tok===this.turnToken){this.busy=false;this.endTurn();} },450); }
       this.refresh();
     }
   },
@@ -686,11 +690,11 @@ const Game = {
     const plan=AI.plan(s); const ok=()=>tok===this.turnToken&&!s.over;
     if(plan){
       for(const p of plan.pre){ if(!ok())return; await this.doMove(p.x,p.y,true); this.refresh(); await sleep(260); }
-      if(ok()){ const k=plan.skill;
+      for(const k of plan.skills){ if(!ok())break;
         if(k.type==="ice") await this.doIce(k.x,k.y,true);
         else if(k.type==="nova") await this.doNova(true);
         else if(k.type==="tp") await this.doTeleport(k.x,k.y,true);
-        this.refresh(); if(k.type!=="none") await sleep(350); }
+        this.refresh(); await sleep(350); }
       for(const p of plan.post){ if(!ok())return; await this.doMove(p.x,p.y,true); this.refresh(); await sleep(260); }
     }
     if(!ok()){ if(s.over&&tok===this.turnToken) this.finish(); return; }
