@@ -63,6 +63,11 @@ html,body{height:100dvh;width:100vw;overflow:hidden;background:var(--bg);color:v
 .pc.on{box-shadow:inset 0 0 0 1px #38BDF8,0 0 12px #38bdf866;background:linear-gradient(180deg,#14283a,#0b141c)}
 .pc.on b{color:var(--frost)}
 .pcat{font-size:11px;letter-spacing:.25em;color:var(--gold);text-transform:uppercase;margin:6px 2px 0;display:flex;align-items:center;gap:8px}
+.pc.foe{border-color:#8A030388;background:#1a0606cc;cursor:default}
+.pcat.foe{color:#e06050}
+#foeBar{display:flex;gap:4px;justify-content:center;align-items:center;font-size:10px;letter-spacing:.15em;color:#e06050;padding:2px 0}
+#foeBar button{width:30px;height:30px;padding:3px;background:#1a0606;border:1px solid #8A030399;border-radius:4px}
+#foeBar svg{width:100%;height:100%}
 .pcat::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,#A8844688,transparent)}
 #pickGo{width:100%;max-width:420px;flex:none}
 #p1{text-align:right} #p1 .row{flex-direction:row-reverse}
@@ -155,6 +160,7 @@ html,body{height:100dvh;width:100vw;overflow:hidden;background:var(--bg);color:v
   </div>
   <div id="stage"><canvas id="cv"></canvas><div id="toast"></div></div>
   <div id="ctrl">
+    <div id="foeBar"></div>
     <div id="skills"></div>
     <div id="acts">
       <button class="ab" id="moveBtn">BEWEGEN</button>
@@ -163,7 +169,7 @@ html,body{height:100dvh;width:100vw;overflow:hidden;background:var(--bg);color:v
   </div>
 </div>
 <div id="fx"></div><div id="scan"></div><div id="grain"></div><div id="flash"></div>
-<div id="pick"><h2 id="pickT"></h2><div class="rule"></div><p class="ph">Wähle 3 Zauber. Jeder Zauber einmal pro Zug.</p><div id="pickGrid"></div><button class="ab" id="pickGo"></button></div>
+<div id="pick"><h2 id="pickT"></h2><div class="rule"></div><p class="ph">Wähle 4 Zauber. Jeder Zauber einmal pro Zug.</p><div id="pickGrid"></div><button class="ab" id="pickGo"></button></div>
 <div id="ov"><h1 id="ovT"></h1><div class="rule"></div><p id="ovP"></p><button class="ab" id="ovB"></button></div>
 <script>
 "use strict";
@@ -874,8 +880,8 @@ const SkillFX = {
    ========================================================= */
 const Game = {
   s:null, ui:{mode:null}, busy:false, mode:"ai", turnToken:0, skillKey:"",
-  run:null, duelLoadouts:[["ice","nova","tp"],["fire","meteor","claw"]],
-  newRun(){ this.run={stage:0,hp:100,maxHp:100,loadout:["ice","fire","nova"],runes:[],items:[]}; },
+  run:null, duelLoadouts:[["ice","nova","tp","armor"],["fire","meteor","claw","tp"]],
+  newRun(){ this.run={stage:0,hp:100,maxHp:100,loadout:["ice","fire","nova","armor"],runes:[],items:[]}; },
   async start(){
     this.turnToken++; const tok=this.turnToken; this.busy=true;
     $("#ov").className=""; document.getElementById("fx").style.background="";
@@ -884,7 +890,7 @@ const Game = {
     const p1base={...DUEL_ENEMY,skills:this.duelLoadouts[1]};
     this.s=Logic.create("2p",{name:"Eiskönigin",look:"queen",hp:100,skills:this.duelLoadouts[0]},p1base); Anim.reset(this.s); this.refresh();
     this.duelLoadouts[0]=await Picker.open("Eiskönigin: Zauber wählen",this.duelLoadouts[0],[],"ice"); if(tok!==this.turnToken) return;
-    this.duelLoadouts[1]=await Picker.open("Abgrund-Dämon: Zauber wählen",this.duelLoadouts[1],[],"",true); if(tok!==this.turnToken) return;
+    this.duelLoadouts[1]=await Picker.open("Abgrund-Dämon: Zauber wählen",this.duelLoadouts[1],[],"",true,{name:"Eiskönigin",skills:this.duelLoadouts[0]}); if(tok!==this.turnToken) return;
     this.s=Logic.create("2p",{name:"Eiskönigin",look:"queen",hp:100,skills:this.duelLoadouts[0]},{...DUEL_ENEMY,skills:this.duelLoadouts[1]});
     this.begin();
   },
@@ -892,10 +898,13 @@ const Game = {
     const run=this.run, e=ENEMIES[run.stage];
     this.s=Logic.create("ai",this.p0cfg(),{...e,skills:e.skills}); Anim.reset(this.s); this.refresh();
     await Info.show(`Abstieg ${run.stage+1}/${ENEMIES.length}`, e.name, e.intro, "WEITER", e.boss?"":"ice"); if(tok!==this.turnToken) return;
-    run.loadout=await Picker.open("Zauber für diesen Kampf",run.loadout,run.runes,"ice"); if(tok!==this.turnToken) return;
+    run.loadout=await Picker.open("Zauber für diesen Kampf",run.loadout,run.runes,"ice",false,e); if(tok!==this.turnToken) return;
     this.s=Logic.create("ai",this.p0cfg(),{...e,skills:e.skills});
     this.begin();
   },
+  drawFoe(){ const s=this.s, fb=$("#foeBar"); if(!s||!s.units) return; const f=s.units[1-s.active]; fb.innerHTML="GEGNER ";
+    f.skills.forEach(k=>{const d=SKILLS[k];const b=document.createElement("button");b.innerHTML=`<svg viewBox="0 0 32 32">${ICONS[k]}</svg>`;
+      b.onclick=()=>{Sound.unlock();this.toast(`${d.name} (${d.ap} AP${d.cd?", CD "+d.cd:""}): ${d.desc}`,"info");};fb.appendChild(b);}); },
   p0cfg(){ const r=this.run; return {name:"Eiskönigin",look:"queen",hp:r.hp,maxHp:r.maxHp,skills:r.loadout,runes:r.runes,items:r.items,shield:r.items.includes("ring")?15:0,pref:3}; },
   begin(){ Anim.reset(this.s); this.skillKey=""; this.ui.mode="move"; this.busy=false; this.refresh(); this.toast(this.s.units[0].name+" beginnt. AP: "+this.s.ap,"info"); },
   humanTurn(){return this.s&&!this.s.over && (this.mode==="2p"||this.s.active===0);},
@@ -921,7 +930,7 @@ const Game = {
   view(){const s=this.s;return{hl:this.highlights(),walls:s.walls,surf:s.surf,pending:s.pending,units:s.units.map((u,i)=>({u,v:Anim.v[i],active:s.active===i&&!s.over,foeV:Anim.v[1-i]}))};},
   buildSkills(me){
     const key=me.id+":"+me.skills.join(",")+":"+me.items.join(","); if(key===this.skillKey) return; this.skillKey=key;
-    const box=$("#skills"); box.innerHTML=""; box.style.gridTemplateColumns=`repeat(${me.skills.length},1fr)`;
+    this.drawFoe(); const box=$("#skills"); box.innerHTML=""; box.style.gridTemplateColumns=`repeat(${me.skills.length},1fr)`;
     me.skills.forEach(k=>{const d=SKILLS[k];const b=document.createElement("button");b.className="sk";b.dataset.sk=k;
       b.innerHTML=`<span class="apc"></span><svg viewBox="0 0 32 32">${ICONS[k]}</svg><span class="lbl">${d.name}</span><span class="sub">${d.sub}</span><span class="cd"></span>`;
       b.addEventListener("click",()=>this.selectMode(k)); box.appendChild(b);});
@@ -1056,21 +1065,24 @@ const Info = { show(kicker,title,text,btn,cls){ return new Promise(res=>{ const 
   $("#ovT").innerHTML=`<small>${kicker}</small>${title}`; $("#ovP").textContent=text; const b=$("#ovB"); b.textContent=btn;
   b.onclick=()=>{Sound.unlock();Sound.fx.click();o.className="";b.onclick=null;res();}; }); } };
 const Picker = {
-  open(title,current,runes,cls,demon){ return new Promise(res=>{
+  open(title,current,runes,cls,demon,foe){ return new Promise(res=>{
     const el=$("#pick"), grid=$("#pickGrid"), btn=$("#pickGo"); let sel=[...current].filter(k=>SKILLS[k]&&(demon||!SKILLS[k].hidden));
     $("#pickT").textContent=title; el.className="show "+(cls||"");
     const ids=demon?Object.keys(SKILLS):SKILL_IDS;
     const draw=()=>{ grid.innerHTML="";
+      if(foe){ const h=document.createElement("div");h.className="pcat foe";h.textContent="Zauber des Gegners: "+foe.name;grid.appendChild(h);
+        foe.skills.forEach(k=>{const d=SKILLS[k];const c=document.createElement("div");c.className="pc foe";c.innerHTML=`<svg viewBox="0 0 32 32">${ICONS[k]}</svg><div><b>${d.name}</b><i>${d.ap} AP · ${d.sub}${d.cd?" · CD "+d.cd:""}</i><span>${d.desc}</span></div>`;grid.appendChild(c);});
+        if(foe.immune){const c=document.createElement("div");c.className="pc foe";c.innerHTML=`<div><b>Immun: ${foe.immune==="fire"?"Feuer":foe.immune}</b><span>Feuerzauber und Feuerboden schaden ihm nicht.</span></div>`;grid.appendChild(c);} }
       for(const cat of Object.keys(CATS)){ const list=ids.filter(k=>SKILLS[k].cat===cat); if(!list.length) continue;
         const hdr=document.createElement("div");hdr.className="pcat";hdr.textContent=CATS[cat];grid.appendChild(hdr);
         list.forEach(k=>{const d=SKILLS[k];const c=document.createElement("button");c.className="pc"+(sel.includes(k)?" on":"");
           const rn=runes.filter(r=>RUNES[r].skill===k).map(r=>`<em>✦ ${RUNES[r].name}: ${RUNES[r].desc}</em>`).join("");
           c.innerHTML=`<svg viewBox="0 0 32 32">${ICONS[k]}</svg><div><b>${d.name}</b><i>${d.ap} AP · ${d.sub}${d.cd?" · CD "+d.cd:""}</i><span>${d.desc}</span>${rn}</div>`;
-          c.onclick=()=>{Sound.unlock();Sound.fx.click(); if(sel.includes(k)) sel=sel.filter(x=>x!==k); else if(sel.length<3) sel.push(k); else {sel.shift();sel.push(k);} draw();};
+          c.onclick=()=>{Sound.unlock();Sound.fx.click(); if(sel.includes(k)) sel=sel.filter(x=>x!==k); else if(sel.length<4) sel.push(k); else {sel.shift();sel.push(k);} draw();};
           grid.appendChild(c);}); }
-      btn.disabled=sel.length!==3; btn.textContent=sel.length===3?"KAMPF BEGINNEN":`NOCH ${3-sel.length} WÄHLEN`; };
+      btn.disabled=sel.length!==4; btn.textContent=sel.length===4?"KAMPF BEGINNEN":`NOCH ${4-sel.length} WÄHLEN`; };
     draw(); grid.scrollTop=0;
-    btn.onclick=()=>{ if(sel.length!==3) return; Sound.unlock(); el.className=""; btn.onclick=null; res(Object.keys(SKILLS).filter(k=>sel.includes(k))); };
+    btn.onclick=()=>{ if(sel.length!==4) return; Sound.unlock(); el.className=""; btn.onclick=null; res(Object.keys(SKILLS).filter(k=>sel.includes(k))); };
   });}
 };
 const Loot = {
