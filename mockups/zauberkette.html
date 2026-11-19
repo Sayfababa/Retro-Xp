@@ -109,6 +109,26 @@ h3::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,#A884468
 .tag.kaelte{color:#9be0ff;border-color:#1e5a82}.tag.feuer{color:#ffb070;border-color:#8a3a10}
 .tag.verb{color:#ffd24a;border-color:#7a6020}.tag.vorb{color:#b9f0c0;border-color:#2a6a3a}
 .btnRow{display:grid;grid-template-columns:1fr 1fr;gap:6px;flex:none}
+.btnRow.b3{grid-template-columns:1fr 1fr 1fr}
+#eqGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.eq{height:62px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;font-family:var(--serif);font-size:9.5px;
+  background:#0d0a09;border:1px solid #3a2f25;border-radius:2px;color:#6b5f4c;padding:2px;text-align:center;line-height:1.1}
+.eq .ic{font-size:20px;line-height:1;filter:grayscale(1) brightness(.6)}
+.eq.has .ic{filter:none}.eq.sel{box-shadow:0 0 0 2px #ffd24a}
+.r0{color:#c8c8c8!important}.r1{color:#7a9cff!important}.r2{color:#ffe14a!important}.r3{color:#ff8a1a!important}
+.eq.r0,.it.r0{border-color:#666}.eq.r1,.it.r1{border-color:#3a5ad0}.eq.r2,.it.r2{border-color:#b09a20}.eq.r3,.it.r3{border-color:#d06a10;box-shadow:inset 0 0 10px #d06a1044}
+#invList{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.it{height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;background:#0d0a09;border:1px solid;border-radius:2px;font-size:9px;font-family:var(--pix)}
+.it .ic{font-size:20px}.it.sel{box-shadow:0 0 0 2px #fff}.it.new::after{content:"NEU";position:absolute;font-size:7px;color:#ffd24a;transform:translate(14px,-18px)}
+#gSel,#gSum{padding:9px 11px;display:flex;flex-direction:column;gap:3px;font-family:Georgia,serif;font-size:11.5px}
+#gSel .nm{font-family:var(--serif);font-size:14px;font-weight:700}
+#gSel .ty{font-size:10px;color:#8f826b;letter-spacing:.1em}
+#gSel .af{color:#9fb0ff}#gSel .leg{color:#ff9a3a;font-style:italic}
+.cmp{display:grid;grid-template-columns:1fr auto;gap:1px 10px;font-size:11px;margin-top:4px;border-top:1px solid #3a2f25;padding-top:4px}
+.up{color:#6fe07a}.dn{color:#ff6a5a}
+.gbtn{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}
+#gSum div{display:flex;justify-content:space-between}#gSum b{font-family:var(--pix);color:var(--frost)}
+.drop{border:1px solid;padding:8px;font-family:Georgia,serif;font-size:11.5px;display:flex;flex-direction:column;gap:2px;background:#0d0a09}
 /* Tree */
 .tn{display:grid;grid-template-columns:1fr auto;gap:2px 8px;padding:8px 10px;cursor:pointer;text-align:left;color:var(--text);font-family:var(--serif);
   background:linear-gradient(180deg,#1c1613,#100c0a);border:1px solid #3a2f25;border-radius:3px}
@@ -161,7 +181,7 @@ h3.g-fire{color:#ff9a4a}h3.g-fire::after{background:linear-gradient(90deg,#ff6a1
     <h3>Zauber – antippen zum Einsetzen</h3>
     <div id="spGrid"></div>
   </div>
-  <div class="btnRow"><button class="ab" id="bTree">SKILL TREE</button><button class="ab" id="bSet">REGLER</button></div>
+  <div class="btnRow b3"><button class="ab" id="bTree">SKILL TREE</button><button class="ab" id="bGear">GEAR</button><button class="ab" id="bSet">REGLER</button></div>
   <button class="ab red" id="bGo">KAMPF BEGINNEN</button>
 </div></div>
 
@@ -172,6 +192,20 @@ h3.g-fire{color:#ff9a4a}h3.g-fire::after{background:linear-gradient(90deg,#ff6a1
   <p class="note" style="text-align:center">Punkte sind dauerhaft. Antippen markiert, nochmal antippen bestätigt.</p>
   <div class="scroll" id="treeList"></div>
   <div class="btnRow"><button class="ab" id="bTreeR">ZURÜCKSETZEN</button><button class="ab" id="bTreeX">ZURÜCK</button></div>
+</div></div>
+
+<!-- Gear -->
+<div class="ov" id="gear"><div class="ovIn">
+  <h2>Ausrüstung</h2>
+  <div class="scroll">
+    <div id="eqGrid"></div>
+    <div class="panel" id="gSel"></div>
+    <h3 id="invH">Lager</h3>
+    <div id="invList"></div>
+    <h3>Gesamtwerte</h3>
+    <div class="panel" id="gSum"></div>
+  </div>
+  <button class="ab" id="bGearX">ZURÜCK</button>
 </div></div>
 
 <!-- Regler -->
@@ -229,7 +263,7 @@ const SL=[
  ["Gegner",[["eHp","Lebenspunkte",40,250,5,"%"],["eDmg","Schaden",40,250,5,"%"],["depthScale","Pro Tiefe stärker",0,60,5,"%"],["resist","Resistenz-Affix",10,90,5,"%"],["roundCap","Zeitlimit (Raserei ab Zug)",8,40,1,""]]]
 ];
 const DEF={heroHp:150,atk:10,critMult:200,freezeThr:3,freezeImm:2,burnDmg:3,burnMax:6,vuln:20,vulnT:2,eHp:100,eDmg:100,depthScale:25,resist:50,roundCap:20};
-let C={...DEF},P={depth:1,pts:0,earned:0,tree:{},chain:["nova","grip","shatter","meteor"]};
+let C={...DEF},P={depth:1,pts:0,earned:0,tree:{},chain:["nova","grip","shatter","meteor"],eq:{},inv:[]};
 try{Object.assign(C,JSON.parse(localStorage.getItem("zk_c")||"{}"));Object.assign(P,JSON.parse(localStorage.getItem("zk_p")||"{}"));}catch(e){}
 const save=()=>{try{localStorage.setItem("zk_c",JSON.stringify(C));localStorage.setItem("zk_p",JSON.stringify(P));}catch(e){}};
 
@@ -261,6 +295,61 @@ const TREE=[
  ["Schutz",[["panzer","Frostpanzer",2,"Schild +50 % je Stufe."],["gegen","Gegenfrost",1,"Bricht der Schild, +2 weitere Unterkühlt."]]]
 ];
 const T=k=>P.tree[k]||0;
+/* ================== GEAR ================== */
+const SLOTS=[["helm","Helm","⛑"],["brust","Brust","🛡"],["hose","Hose","👖"],["schuhe","Schuhe","🥾"],["waffe","Waffe","🪄"],["amulett","Amulett","📿"],["ring","Ring","💍"]];
+const SLOTN=Object.fromEntries(SLOTS.map(x=>[x[0],x[1]])),SLOTI=Object.fromEntries(SLOTS.map(x=>[x[0],x[2]]));
+const RARN=["Normal","Magisch","Selten","Legendär"];
+// key:[Text (# = Wert), min, max, fest?]
+const GA={
+ life:["+# Leben",4,10],spell:["+# % Zauberschaden",3,7],critC:["+# % Krit-Chance",2,5],critD:["+# % Krit-Schaden",15,40],
+ regen:["+# Leben pro Zug",1,2],dr:["# % weniger erlittener Schaden",2,4],
+ cold:["+# % Kälte-Schaden",5,12],coldChill:["Kälte-Zauber legen +# Unterkühlt",1,1,1],frozenDmg:["Eingefrorene nehmen +# % Schaden",5,12],
+ freezeLong:["Einfrieren hält # Zug länger",1,1,1],coldPen:["Durchdringt # % Kälte-Resistenz",10,25],
+ fire:["+# % Feuer-Schaden",5,12],burnDmg:["+# Brand-Schaden je Stapel",1,2],burnMax:["Maximaler Brand +#",1,3],
+ burnSlow:["Brand verfällt nur jeden 2. Zug",1,1,1],firePen:["Durchdringt # % Feuer-Resistenz",10,25],
+ tProj:["+# % Projektil-Schaden",10,25],tSalve:["+# % Salven-Schaden",10,25],tEin:["+# % Einschlag-Schaden",10,25],tDauer:["+# % Dauer-Schaden",10,25],
+ verbKeep:["Verbraucher lassen # % der Stapel liegen",20,40],vorbDouble:["Vorbereiter: # % Chance doppelt zu wirken",10,25],
+ opener:["Erster Zauber im Kampf +# %",15,35],finale:["Platz 4 der Kette +# %",10,25],
+ shieldP:["Schild +# %",15,35],startShield:["Kampfbeginn mit Schild #",5,12],heavyDR:["# % weniger Schaden von ⚠-Angriffen",6,15],
+ thorns:["Treffer gegen dich: Angreifer +# Unterkühlt",1,1,1],leech:["# % des Schadens heilt dich",2,4],critHeal:["Bei Krit: +# Leben",2,5]
+};
+const GA_IDS=Object.keys(GA);
+const SHORT={life:"Leben",spell:"Zauberschaden %",critC:"Krit-Chance %",critD:"Krit-Schaden %",regen:"Leben pro Zug",dr:"Schadensminderung %",cold:"Kälte-Schaden %",coldChill:"Extra Unterkühlt",
+ frozenDmg:"Schaden vs. Eingefrorene %",freezeLong:"Einfrieren länger (Züge)",coldPen:"Kälte-Durchdringung %",fire:"Feuer-Schaden %",burnDmg:"Brand-Schaden je Stapel",burnMax:"Max. Brand",
+ burnSlow:"Brand verfällt langsamer",firePen:"Feuer-Durchdringung %",tProj:"Projektil %",tSalve:"Salve %",tEin:"Einschlag %",tDauer:"Dauer %",verbKeep:"Verbraucher behalten %",
+ vorbDouble:"Vorbereiter doppelt %",opener:"Eröffnung %",finale:"Finale (Platz 4) %",shieldP:"Schild %",startShield:"Start-Schild",heavyDR:"Weniger ⚠-Schaden %",thorns:"Dornen-Unterkühlt",leech:"Lebensraub %",critHeal:"Leben bei Krit"};
+const BASE={waffe:["spell",4,8],brust:["life",6,12],helm:["life",3,7],hose:["life",4,9],schuhe:["life",3,6]};
+const LEG={
+ krone:["helm","Krone des Winters","Einfrieren braucht immer nur 2 Unterkühlt, aber Kälte-Schaden −20 %."],
+ glutherz:["brust","Glutherz","Brand auf dem Gegner heilt dich um 1 je Stapel und Zug."],
+ zyklus:["hose","Ketten des Zyklus","Nach jedem Durchlauf der Kette ist der nächste Zauber kritisch."],
+ frostschritt:["schuhe","Frostschritt","Der erste Gegner-Schritt jedes Kampfes fällt aus."],
+ zweifeuer:["waffe","Stab der Zwei Feuer","Feuerball wirkt zweimal. Meteor ist gesperrt."],
+ splitter:["waffe","Splitterklinge","Zerschmettern verbraucht kein Unterkühlt."],
+ sturm:["amulett","Auge des Sturms","Salven treffen +2 Mal."],
+ echos:["ring","Ring der Echos","Nach Platz 4 wird Platz 1 mit 50 % wiederholt."],
+ thermostein:["ring","Thermostein","Thermoschock zündet schon mit Unterkühlt ODER Brand."]
+};
+const NAMES={helm:["Kapuze","Helm","Totenhaube"],brust:["Robe","Kettenhemd","Knochenharnisch"],hose:["Beinlinge","Schienen","Gamaschen"],schuhe:["Stiefel","Sandalen","Schreiter"],
+ waffe:["Stab","Zauberstab","Ritualdolch"],amulett:["Amulett","Talisman","Halsreif"],ring:["Ring","Siegel","Reif"]};
+const PRE=["Frost","Grab","Asche","Schatten","Blut","Eis","Glut","Knochen","Nacht","Runen"];
+const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1)),pick=a=>a[Math.floor(Math.random()*a.length)];
+function rollAff(k,lvl){const [,mn,mx,fix]=GA[k];return {k,v:fix?mn:Math.round(rnd(mn,mx)*(1+0.25*(lvl-1)))};}
+function makeItem(lvl,rar,slot){
+  slot=slot||pick(SLOTS)[0]; let leg=null;
+  if(rar===3){const ls=Object.keys(LEG).filter(k=>LEG[k][0]===slot); if(ls.length)leg=pick(ls); else rar=2;}
+  const it={uid:Date.now().toString(36)+Math.random().toString(36).slice(2,6),slot,rar,lvl,aff:[],isNew:1};
+  if(BASE[slot]){const [k,a,b]=BASE[slot];it.base={k,v:Math.round(rnd(a,b)*(1+0.25*(lvl-1)))};}
+  const n=[0,rnd(1,2),rnd(3,4),2][rar], pool=GA_IDS.slice();
+  for(let i=0;i<n;i++){const k=pool.splice(Math.floor(Math.random()*pool.length),1)[0];it.aff.push(rollAff(k,lvl));}
+  if(leg){it.leg=leg;it.name=LEG[leg][1];} else it.name=(rar?pick(PRE)+"-":"")+pick(NAMES[slot]).toLowerCase().replace(/^./,c=>rar?c:c.toUpperCase());
+  return it;
+}
+function rollDrop(lvl,boss){const r=Math.random();const rar=boss?(r<.25?3:2):(r<.05?3:r<.25?2:r<.7?1:0);return makeItem(lvl,rar);}
+function gearStats(eq){const g={leg:{}};for(const k of GA_IDS)g[k]=0;
+  for(const sl in eq){const it=eq[sl];if(!it)continue;if(it.base)g[it.base.k]+=it.base.v;for(const a of it.aff)g[a.k]+=a.v;if(it.leg)g.leg[it.leg]=1;}
+  return g;}
+const affTxt=a=>GA[a.k][0].replace("#",a.v);
 const AFF={
  fireRes:{n:"Feuerresistent",d:"Nimmt weniger Feuer-Schaden."},
  coldRes:{n:"Kälteresistent",d:"Nimmt weniger Kälte-Schaden."},
@@ -288,68 +377,80 @@ function foeFor(depth,idx){
 
 /* ================== KAMPFLOGIK ================== */
 function newFight(foe,chain){
-  return {round:0,chain:[...chain],foe,ev:[],over:null,
-    h:{hp:C.heroHp,max:C.heroHp,shield:0},
+  const G=gearStats(P.eq||{});
+  return {round:0,chain:[...chain],foe,ev:[],over:null,G,casts:0,fxLeft:0,
+    h:{hp:C.heroHp+G.life,max:C.heroHp+G.life,shield:G.startShield},
     e:{hp:foe.hp,max:foe.hp,shield:foe.aff.includes("armored")?40:0,chill:0,burn:0,frozen:false,imm:0,brittle:false,vuln:0,rage:0},
     dots:[],momentum:0,skipped:[],stats:{dmg:0,crits:0,freezes:0,skips:0,maxHit:0,consumed:0}};
 }
-const thr=F=>Math.max(1,C.freezeThr-T("tiefer")+(F.foe.aff.includes("tough")?1:0));
+const thr=F=>F.G&&F.G.leg.krone?2+(F.foe.aff.includes("tough")?1:0):Math.max(1,C.freezeThr-T("tiefer")+(F.foe.aff.includes("tough")?1:0));
 function E(F,o){F.ev.push(o);}
 function freeze(F){const e=F.e;
   if(F.foe.aff.includes("unstop")){E(F,{t:"info",txt:"Unaufhaltsam – kein Einfrieren."});return;}
   if(e.frozen)return; if(e.imm>0){E(F,{t:"info",txt:`Immun gegen Einfrieren (${e.imm} Z).`});return;}
-  e.frozen=true;e.chill=0;F.stats.freezes++;E(F,{t:"freeze"});}
+  e.frozen=true;e.chill=0;F.fxLeft=F.G.freezeLong;F.stats.freezes++;E(F,{t:"freeze"});}
 function chill(F,n){const e=F.e; if(e.frozen)return; e.chill+=n; if(e.chill>=thr(F)){ if(e.imm>0||F.foe.aff.includes("unstop")) e.chill=thr(F); else freeze(F);} }
-function burn(F,n){F.e.burn=Math.min(C.burnMax,F.e.burn+n);}
+function burn(F,n){F.e.burn=Math.min(C.burnMax+F.G.burnMax,F.e.burn+n);}
+const keepN=(F,n)=>Math.max(T("glut")?Math.floor(n/2):0,Math.floor(n*F.G.verbKeep/100));
+const pen=(F,k)=>Math.max(0,C.resist-F.G[k])/100;
 function hit(F,pct,o){ // o:{el:[...],tags,lab,small}
   const e=F.e; let m=pct/100*C.atk;
-  if(o.el.includes("kaelte")) m*=1+0.15*T("biss");
-  if(o.el.includes("feuer")) m*=1+0.15*T("flamme");
-  if(o.el.includes("feuer")&&F.foe.aff.includes("fireRes")&&!o.el.includes("kaelte")) m*=1-C.resist/100;
-  if(o.el.includes("kaelte")&&F.foe.aff.includes("coldRes")&&!o.el.includes("feuer")) m*=1-C.resist/100;
+  const G=F.G,tg=o.tags||[];
+  m*=1+G.spell/100;
+  if(o.el.includes("kaelte")) m*=1+0.15*T("biss")+G.cold/100-(G.leg.krone?.2:0);
+  if(o.el.includes("feuer")) m*=1+0.15*T("flamme")+G.fire/100;
+  if(o.el.includes("feuer")&&F.foe.aff.includes("fireRes")&&!o.el.includes("kaelte")) m*=1-pen(F,"firePen");
+  if(o.el.includes("kaelte")&&F.foe.aff.includes("coldRes")&&!o.el.includes("feuer")) m*=1-pen(F,"coldPen");
+  m*=1+((tg.includes("projektil")?G.tProj:0)+(tg.includes("salve")?G.tSalve:0)+(tg.includes("einschlag")?G.tEin:0)+(tg.includes("dauer")?G.tDauer:0))/100;
   if(e.vuln>0) m*=1+C.vuln/100;
-  if(e.frozen) m*=1+0.10*T("perma");
+  if(e.frozen) m*=1+0.10*T("perma")+G.frozenDmg/100;
   m*=F.spellMult||1;
-  let crit=false; if(e.brittle||o.crit){crit=true;e.brittle=false;}
-  if(crit) m*=(C.critMult+50*T("kante"))/100;
+  let crit=false; if(e.brittle||o.crit||F.forceCrit){crit=true;e.brittle=false;F.forceCrit=false;} else if(G.critC&&Math.random()<G.critC/100)crit=true;
+  if(crit) m*=(C.critMult+50*T("kante")+G.critD)/100;
   let dmg=Math.max(1,Math.round(m)), abs=0;
   if(e.shield>0){ if(o.tags.includes("einschlag")){E(F,{t:"info",txt:"Einschlag zerbricht den Schild!"});e.shield=0;}
     else{abs=Math.min(e.shield,dmg);e.shield-=abs;dmg-=abs;} }
   e.hp=Math.max(0,e.hp-dmg); F.stats.dmg+=dmg; if(crit)F.stats.crits++; F.stats.maxHit=Math.max(F.stats.maxHit,dmg);
+  if(G.leech||crit&&G.critHeal){const hl=Math.min(F.h.max-F.h.hp,Math.round(dmg*G.leech/100)+(crit?G.critHeal:0));if(hl>0){F.h.hp+=hl;E(F,{t:"hheal",n:hl});}}
   E(F,{t:"hit",dmg,abs,crit,col:o.el.includes("feuer")&&!o.el.includes("kaelte")?"fire":o.el.includes("kaelte")&&!o.el.includes("feuer")?"cold":"mix",lab:o.lab,small:o.small});
   if(crit&&T("schwung")) F.momentum=0.25*T("schwung");
   return dmg;
 }
-function burnRemaining(F){let s=F.e.burn,t=0,per=C.burnDmg+T("schwel");while(s>0){t+=s*per;s--;}return t;}
-function castSpell(F,id){
-  const S=SPELLS[id], tg=S.tags, el=tg.filter(x=>x==="kaelte"||x==="feuer"), e=F.e;
-  F.spellMult=1+(F.momentum||0); if(F.momentum)E(F,{t:"info",txt:`Schwung: +${Math.round(F.momentum*100)} %`}); F.momentum=0;
+function burnRemaining(F){let s=F.e.burn,t=0,per=C.burnDmg+T("schwel")+F.G.burnDmg;while(s>0){t+=s*per;s--;}return t;}
+function castSpell(F,id,o={}){
+  const S=SPELLS[id], tg=S.tags, el=tg.filter(x=>x==="kaelte"||x==="feuer"), e=F.e, G=F.G;
+  if(id==="meteor"&&G.leg.zweifeuer){E(F,{t:"info",txt:"Meteor ist gesperrt (Stab der Zwei Feuer)."});return;}
+  F.spellMult=(o.mult||1)*(1+(F.momentum||0));
+  if(!o.extra){ if(F.casts===0&&G.opener){F.spellMult*=1+G.opener/100;E(F,{t:"info",txt:`Eröffnung: +${G.opener} %`});}
+    if(F.round%4===3&&G.finale)F.spellMult*=1+G.finale/100; F.casts++; } if(F.momentum)E(F,{t:"info",txt:`Schwung: +${Math.round(F.momentum*100)} %`}); F.momentum=0;
   if(tg.includes("verb")) F.spellMult*=1+0.2*T("gier");
   E(F,{t:"cast",id});
   const H=(p,x)=>hit(F,p,{el,tags:tg,lab:S.n,...x});
   const echo=(p)=>{ if(tg.includes("projektil")&&T("gabel")) H(p*0.25*T("gabel"),{small:1,lab:"Gabelung"});
                     if(tg.includes("einschlag")&&T("hall")) {E(F,{t:"info",txt:"Nachhall!"});H(p*0.25*T("hall"),{lab:"Nachhall"});}
                     if(tg.includes("einschlag")&&T("erschuett")) e.vuln=C.vulnT; };
-  const salvo=n=>n+T("hagel");
+  const salvo=n=>n+T("hagel")+(G.leg.sturm?2:0);
   switch(id){
    case "nova": for(let i=0;i<salvo(3);i++){H(25,{small:1});chill(F,1);} break;
    case "ice": H(e.frozen?180:120); chill(F,1); echo(120); break;
    case "grip": H(60); if(e.chill>=1||e.frozen) freeze(F); else E(F,{t:"info",txt:"Frostgriff: Ziel war nicht unterkühlt."}); break;
-   case "shatter":{const s=e.chill,fr=e.frozen; const p=(60+50*s)*(fr?2:1); if(s||fr)F.stats.consumed++; e.chill=T("glut")?Math.floor(s/2):0;
+   case "shatter":{const s=e.chill,fr=e.frozen; const p=(60+50*s)*(fr?2:1); if(s||fr)F.stats.consumed++; if(!G.leg.splitter)e.chill=keepN(F,s);
      E(F,{t:"info",txt:`Zerschmettern verbraucht ${s} Unterkühlt${fr?" + Eingefroren":""}.`}); H(p); echo(p); break;}
    case "blizzard": F.dots.push({id,left:3+T("klang")}); E(F,{t:"info",txt:"Blizzard tobt."}); break;
    case "embers": F.dots.push({id,left:3+T("klang")}); E(F,{t:"info",txt:"Glutregen fällt."}); break;
-   case "fire": H(140); burn(F,T("zunder")?3:2); echo(140); break;
+   case "fire": for(let k=0;k<(G.leg.zweifeuer?2:1);k++){H(140); burn(F,T("zunder")?3:2); echo(140);} break;
    case "inferno":{const r=burnRemaining(F); if(!r){E(F,{t:"info",txt:"Feuersbrunst: kein Brand zum Zünden."});H(40);break;}
-     F.stats.consumed++; const keep=T("glut")?Math.floor(e.burn/2):0; E(F,{t:"info",txt:`Feuersbrunst zündet ${e.burn} Brand!`}); e.burn=keep;
+     F.stats.consumed++; const keep=keepN(F,e.burn); E(F,{t:"info",txt:`Feuersbrunst zündet ${e.burn} Brand!`}); e.burn=keep;
      H(r*1.5/C.atk*100); break;}
    case "meteor": H(300); e.vuln=C.vulnT; echo(300); break;
-   case "thermo": if(e.chill>=1&&e.burn>=1){F.stats.consumed++;E(F,{t:"info",txt:`Thermoschock verbraucht ${e.chill} Unterkühlt + ${e.burn} Brand.`});
-       e.chill=T("glut")?Math.floor(e.chill/2):0; e.burn=T("glut")?Math.floor(e.burn/2):0; H(200); e.brittle=true; E(F,{t:"info",txt:"Ziel ist spröde – der nächste Treffer ist kritisch."});}
+   case "thermo": if(G.leg.thermostein?(e.chill>=1||e.burn>=1):(e.chill>=1&&e.burn>=1)){F.stats.consumed++;E(F,{t:"info",txt:`Thermoschock verbraucht ${e.chill} Unterkühlt + ${e.burn} Brand.`});
+       e.chill=keepN(F,e.chill); e.burn=keepN(F,e.burn); H(200); e.brittle=true; E(F,{t:"info",txt:"Ziel ist spröde – der nächste Treffer ist kritisch."});}
      else H(60); break;
-   case "armor": F.h.shield+=Math.round(30*(1+0.5*T("panzer"))); E(F,{t:"shield"}); break;
+   case "armor": F.h.shield+=Math.round(20*(1+0.5*T("panzer")+G.shieldP/100)); E(F,{t:"shield"}); break;
   }
+  if(tg.includes("kaelte")&&id!=="armor"&&G.coldChill)chill(F,G.coldChill);
   F.spellMult=1;
+  if(!o.extra&&tg.includes("vorb")&&G.vorbDouble&&Math.random()<G.vorbDouble/100&&F.e.hp>0){E(F,{t:"info",txt:`${S.n} wirkt doppelt!`});castSpell(F,id,{extra:1});}
 }
 function tickDots(F){
   for(const d of F.dots){ if(F.e.hp<=0)break; const S=SPELLS[d.id];
@@ -363,26 +464,34 @@ function tickDots(F){
 function heroTurn(F){
   F.ev=[]; const slot=F.round%4, id=F.chain[slot];
   E(F,{t:"turn",who:0,slot});
+  const G=F.G;
+  if(G.regen&&F.h.hp<F.h.max){const n=Math.min(G.regen,F.h.max-F.h.hp);F.h.hp+=n;E(F,{t:"hheal",n});}
+  if(G.leg.zyklus&&slot===0&&F.round>0){F.forceCrit=true;E(F,{t:"info",txt:"Ketten des Zyklus: nächster Zauber kritisch."});}
   tickDots(F);
   if(F.e.hp>0) castSpell(F,id);
+  if(G.leg.echos&&slot===3&&F.e.hp>0){E(F,{t:"info",txt:`Ring der Echos: ${SPELLS[F.chain[0]].n} hallt nach.`});castSpell(F,F.chain[0],{extra:1,mult:.5});}
   if(F.e.hp<=0){F.over="win";E(F,{t:"end"});}
   return F.ev;
 }
 function enemyTurn(F){
   F.ev=[]; const slot=F.round%4, st=F.foe.steps[slot], e=F.e, h=F.h;
   E(F,{t:"turn",who:1,slot});
-  if(e.burn>0){const d=e.burn*(C.burnDmg+T("schwel"))*(F.foe.aff.includes("fireRes")?1-C.resist/100:1);const dd=Math.max(1,Math.round(d));
-    e.hp=Math.max(0,e.hp-dd);F.stats.dmg+=dd;E(F,{t:"hit",dmg:dd,col:"burn",lab:"Brand",small:1,crit:false,abs:0});e.burn--;
+  const G=F.G;
+  if(e.burn>0){if(G.leg.glutherz){const n=Math.min(e.burn,h.max-h.hp);if(n>0){h.hp+=n;E(F,{t:"hheal",n});}}
+    const d=e.burn*(C.burnDmg+T("schwel")+G.burnDmg)*(F.foe.aff.includes("fireRes")?1-pen(F,"firePen"):1);const dd=Math.max(1,Math.round(d));
+    e.hp=Math.max(0,e.hp-dd);F.stats.dmg+=dd;E(F,{t:"hit",dmg:dd,col:"burn",lab:"Brand",small:1,crit:false,abs:0});if(!G.burnSlow||F.round%2)e.burn--;
     if(e.hp<=0){F.over="win";E(F,{t:"end"});return F.ev;}}
-  if(e.frozen){e.frozen=false;e.imm=C.freezeImm;F.skipped.push(F.round);F.stats.skips++;E(F,{t:"skip",slot,step:st});}
+  if(F.round===0&&G.leg.frostschritt&&!e.frozen){F.skipped.push(F.round);F.stats.skips++;E(F,{t:"info",txt:"Frostschritt!"});E(F,{t:"skip",slot,step:st});}
+  else if(e.frozen){if(F.fxLeft>0)F.fxLeft--;else{e.frozen=false;e.imm=C.freezeImm;}F.skipped.push(F.round);F.stats.skips++;E(F,{t:"skip",slot,step:st});}
   else{
     if(e.imm>0)e.imm--;
     const enr=F.round+1>=C.roundCap?2:1; if(enr===2&&F.round+1===C.roundCap)E(F,{t:"info",txt:"RASEREI! Der Gegner macht doppelten Schaden."});
     E(F,{t:"act",step:st});
-    if(st.dmg){let d=Math.round(st.dmg*(1+e.rage/100)*enr),abs=0;
+    if(st.dmg){let d=Math.round(st.dmg*(1+e.rage/100)*enr*(1-G.dr/100)*(st.heavy?1-G.heavyDR/100:1)),abs=0;
       if(h.shield>0){abs=Math.min(h.shield,d);h.shield-=abs;d-=abs;
         if(h.shield<=0){E(F,{t:"info",txt:"Eisrüstung bricht – Kälte schlägt zurück."});chill(F,2+2*T("gegen"));}}
-      h.hp=Math.max(0,h.hp-d);E(F,{t:"hurt",dmg:d,abs});}
+      h.hp=Math.max(0,h.hp-d);E(F,{t:"hurt",dmg:d,abs});
+      if(G.thorns&&d+abs>0)chill(F,G.thorns);}
     if(st.heal){e.hp=Math.min(e.max,e.hp+st.heal);E(F,{t:"heal",n:st.heal});}
     if(st.shield){e.shield+=st.shield;E(F,{t:"info",txt:`${st.n}: Schild ${st.shield}.`});}
     if(st.rage){e.rage+=st.rage;E(F,{t:"info",txt:`${st.n}: +${st.rage} % Schaden.`});}
@@ -540,6 +649,7 @@ async function playEvents(ev,who){
       case "act": lunge[1]=1;fx.push({k:e.step.heavy?"heavy":"claw",t:0});Sound.enemy(e.step.heavy);log(`${F.foe.n}: ${e.step.n}`,"m");await W8(e.step.heavy?380:220);break;
       case "hurt": if(!skipAll){if(e.dmg)addFloat(0,"-"+e.dmg,"hurt");if(e.abs)addFloat(0,"("+e.abs+")","abs",1);flash[0]=.5;shake=.3;}
         log(`→ ${e.dmg} Schaden${e.abs?` (${e.abs} vom Schild)`:""}`,"m");hud({who:1,slot:F.round%4});await W8(320);break;
+      case "hheal": if(!skipAll)addFloat(0,"+"+e.n,"heal");hud();break;
       case "heal": if(!skipAll)addFloat(1,"+"+e.n,"heal");log(`Gegner heilt ${e.n}.`,"m");await W8(250);break;
       case "info": log("· "+e.txt,"t");await W8(120);break;
     }
@@ -556,7 +666,8 @@ async function fight(){
 }
 function result(){
   const win=F.over==="win",s=F.stats,ov=$("#res");let msg="",btn="",act;
-  if(win){P.pts++;P.earned++;
+  let drop=null;
+  if(win){P.pts++;P.earned++;drop=rollDrop(P.depth,F.foe.boss);if(P.inv.length<20)P.inv.push(drop);else drop.lost=1;
     if(run.idx<ENEMIES.length-1){msg=`+1 Skill-Punkt. Weiter zu Gegner ${run.idx+2}.`;btn="WEITER";act=()=>{run.idx++;openPrep();};}
     else{msg=`Abstieg geschafft! +1 Skill-Punkt. Tiefe ${P.depth+1} wartet – Gegner werden stärker und bekommen Affixe.`;btn="TIEFER";act=()=>{P.depth++;run.idx=0;save();openPrep();};}
   } else {msg="Der Abstieg beginnt von vorn. Dein Skill Tree bleibt.";btn="NOCHMAL";act=()=>{run.idx=0;openPrep();};}
@@ -565,6 +676,7 @@ function result(){
    <p class="note" style="text-align:center">${msg}</p>
    <div class="stats"><span>Züge</span><span>${F.round+(win?1:0)}</span><span>Gesamtschaden</span><span>${s.dmg}</span><span>Größter Treffer</span><span>${s.maxHit}</span>
    <span>Krits</span><span>${s.crits}</span><span>Eingefroren</span><span>${s.freezes}×</span><span>Gegner-Schritte ausgefallen</span><span>${s.skips}</span><span>Zustände verbraucht</span><span>${s.consumed}×</span></div>
+   ${drop?`<h3>Beute</h3>${itemCard(drop)}${drop.lost?'<p class="note" style="color:#ff6a5a">Lager voll (20) – Teil verworfen. Mach Platz im Gear-Menü.</p>':'<p class="note">Liegt im Lager – im Gear-Menü anlegen.</p>'}`:""}
    <button class="ab ${win?"ice":"red"}" id="resB">${btn}</button>`;
   ov.classList.add("on");$("#resB").onclick=()=>{ov.classList.remove("on");act();};
 }
@@ -627,10 +739,55 @@ function drawSet(){const L=$("#setList");L.innerHTML=`<p class="note">Änderunge
   const mk=(t,f)=>{const b=document.createElement("button");b.className="ab";b.textContent=t;b.onclick=()=>{f();save();drawSet();};L.appendChild(b);};
   mk("+5 SKILL-PUNKTE",()=>{P.pts+=5;P.earned+=5;});
   mk("TIEFE +1",()=>{P.depth++;});
+  mk("+3 ZUFALLS-TEILE",()=>{for(let i=0;i<3&&P.inv.length<20;i++)P.inv.push(rollDrop(P.depth,Math.random()<.3));});
+  mk("+1 LEGENDÄRES TEIL",()=>{if(P.inv.length<20)P.inv.push(makeItem(P.depth,3,pick(Object.values(LEG))[0]));});
   mk("SKILL TREE ZURÜCKSETZEN",()=>{P.pts+=Object.values(P.tree).reduce((a,b)=>a+b,0);P.tree={};});
   mk("REGLER: STANDARD",()=>{C={...DEF};});
-  mk("ALLES ZURÜCKSETZEN",()=>{C={...DEF};P={depth:1,pts:0,earned:0,tree:{},chain:["nova","grip","shatter","meteor"]};run.idx=0;});
+  mk("ALLES ZURÜCKSETZEN",()=>{C={...DEF};P={depth:1,pts:0,earned:0,tree:{},chain:["nova","grip","shatter","meteor"],eq:{},inv:[]};run.idx=0;});
 }
+/* Gear */
+function itemCard(it,cmp){
+  let h=`<div class="drop it-c r${it.rar}" style="border-color:currentColor"><div class="nm r${it.rar}" style="font-family:var(--serif);font-weight:700;font-size:14px">${SLOTI[it.slot]} ${it.name}</div>
+   <div style="font-size:10px;color:#8f826b;letter-spacing:.1em">${RARN[it.rar].toUpperCase()} · ${SLOTN[it.slot].toUpperCase()} · STUFE ${it.lvl}</div>`;
+  if(it.base)h+=`<div style="color:#e6d3a8">${affTxt(it.base)}</div>`;
+  if(it.leg)h+=`<div style="color:#ff9a3a;font-style:italic">${LEG[it.leg][2]}</div>`;
+  for(const a of it.aff)h+=`<div style="color:#9fb0ff">${affTxt(a)}</div>`;
+  if(cmp){const cur=gearStats(P.eq),nx=gearStats({...P.eq,[it.slot]:it});let rows="";
+    for(const k of GA_IDS){const d=nx[k]-cur[k];if(d)rows+=`<span>${SHORT[k]}</span><span class="${d>0?"up":"dn"}">${d>0?"+":""}${d}</span>`;}
+    const ol=P.eq[it.slot]; if(ol&&ol.leg&&ol.leg!==it.leg)rows+=`<span>${LEG[ol.leg][1]}</span><span class="dn">verloren</span>`;
+    if(it.leg&&(!ol||ol.leg!==it.leg))rows+=`<span>${LEG[it.leg][1]}</span><span class="up">neu</span>`;
+    h+=`<div class="cmp">${rows||'<span class="note">Keine Änderung</span><span></span>'}</div>`;}
+  return h+`</div>`;
+}
+let gSel=null; // {from:"inv",i} | {from:"eq",slot}
+function drawGear(){
+  const g=$("#eqGrid");g.innerHTML="";
+  for(const [sl,n,ic] of SLOTS){const it=P.eq[sl],b=document.createElement("button");
+    b.className="eq"+(it?" has r"+it.rar:"")+(gSel&&gSel.from==="eq"&&gSel.slot===sl?" sel":"");
+    b.innerHTML=`<span class="ic">${ic}</span><span class="${it?"r"+it.rar:""}">${it?it.name:n}</span>`;
+    b.onclick=()=>{Sound.click();gSel=it?{from:"eq",slot:sl}:null;drawGear();};g.appendChild(b);}
+  const L=$("#invList");L.innerHTML="";$("#invH").textContent=`Lager ${P.inv.length}/20`;
+  P.inv.forEach((it,i)=>{const b=document.createElement("button");b.className=`it r${it.rar}`+(gSel&&gSel.from==="inv"&&gSel.i===i?" sel":"");b.style.position="relative";
+    b.innerHTML=`<span class="ic">${SLOTI[it.slot]}</span><span class="r${it.rar}">St.${it.lvl}</span>${it.isNew?'<span style="position:absolute;top:1px;right:3px;font-size:7px;color:#ffd24a">NEU</span>':""}`;
+    b.onclick=()=>{Sound.click();it.isNew=0;gSel={from:"inv",i};save();drawGear();};L.appendChild(b);});
+  if(!P.inv.length)L.innerHTML='<p class="note" style="grid-column:1/-1">Leer. Siege bringen Beute (Boss: garantiert Selten oder besser).</p>';
+  const S=$("#gSel");
+  if(!gSel){S.innerHTML='<p class="note">Tippe ein Teil an: angelegte oben, Beute im Lager unten. Neue Teile zeigen den Vergleich zum angelegten.</p>';}
+  else if(gSel.from==="inv"){const it=P.inv[gSel.i];
+    S.innerHTML=itemCard(it,1)+`<div class="gbtn"><button class="ab ice" id="gEq">ANLEGEN</button><button class="ab red" id="gDel">VERWERFEN</button></div>`;
+    $("#gEq").onclick=()=>{const old=P.eq[it.slot];P.eq[it.slot]=it;P.inv.splice(gSel.i,1);if(old)P.inv.push(old);gSel={from:"eq",slot:it.slot};Sound.crit();save();drawGear();};
+    $("#gDel").onclick=()=>{P.inv.splice(gSel.i,1);gSel=null;save();drawGear();};}
+  else{const it=P.eq[gSel.slot];
+    S.innerHTML=itemCard(it)+`<div class="gbtn"><button class="ab" id="gUn">ABLEGEN</button><button class="ab" id="gNo">SCHLIESSEN</button></div>`;
+    $("#gUn").onclick=()=>{if(P.inv.length>=20)return;P.inv.push(it);delete P.eq[gSel.slot];gSel=null;save();drawGear();};
+    $("#gNo").onclick=()=>{gSel=null;drawGear();};}
+  const G=gearStats(P.eq);let h=`<div><span>Leben</span><b>${C.heroHp+G.life}</b></div>`;
+  for(const k of GA_IDS)if(G[k]&&k!=="life")h+=`<div><span>${affTxt({k,v:G[k]})}</span></div>`;
+  for(const l in G.leg)h+=`<div><span style="color:#ff9a3a">${LEG[l][1]}: ${LEG[l][2]}</span></div>`;
+  $("#gSum").innerHTML=h;
+}
+$("#bGear").onclick=()=>{gSel=null;drawGear();$("#gear").classList.add("on");};
+$("#bGearX").onclick=()=>{$("#gear").classList.remove("on");openPrep();};
 $("#bSet").onclick=()=>{drawSet();$("#set").classList.add("on");};
 $("#bSetX").onclick=()=>{$("#set").classList.remove("on");openPrep();};
 
