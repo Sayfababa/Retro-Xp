@@ -62,6 +62,8 @@ html,body{height:100dvh;width:100vw;overflow:hidden;background:var(--bg);color:v
 .pc span{display:block;font-size:11px;line-height:1.3;margin-top:2px;color:#b0a284}
 .pc.on{box-shadow:inset 0 0 0 1px #38BDF8,0 0 12px #38bdf866;background:linear-gradient(180deg,#14283a,#0b141c)}
 .pc.on b{color:var(--frost)}
+.pcat{font-size:11px;letter-spacing:.25em;color:var(--gold);text-transform:uppercase;margin:6px 2px 0;display:flex;align-items:center;gap:8px}
+.pcat::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,#A8844688,transparent)}
 #pickGo{width:100%;max-width:420px;flex:none}
 #p1{text-align:right} #p1 .row{flex-direction:row-reverse}
 .hp.active{box-shadow:inset 0 0 0 1px #c8a050,inset 0 0 0 3px #0b0807,inset 0 0 0 4px #2a221b,0 0 12px #a8844666}
@@ -213,6 +215,11 @@ const Sound = (()=>{
     comet(){tone(900,.45,"sine",.12,200);noise(.45,4000,.15,"highpass",0,600);},
     explode(){noise(.6,1200,.45,"lowpass",0,80);tone(80,.5,"square",.2,30);},
     meteorFall(){tone(1200,.65,"sawtooth",.06,100);noise(.65,2500,.15,"bandpass",0,200);},
+    armor(){tone(300,.5,"triangle",.12,900);for(let i=0;i<4;i++)tone(1500+i*200,.2,"sine",.05,null,.1+i*.06);},
+    mirror(){tone(1200,.6,"sine",.1,2400);tone(1800,.5,"sine",.06,900,.1);},
+    wall(){noise(.4,2500,.3,"lowpass",0,300);tone(160,.4,"square",.12,60);for(let i=0;i<3;i++)tone(2200-i*300,.15,"sine",.05,null,i*.07);},
+    reflect(){tone(2600,.2,"square",.08,800);tone(400,.3,"sine",.12,1600);},
+    absorb(){tone(900,.2,"triangle",.12,400);},
     blizzard(){noise(1.1,5000,.22,"highpass",0,1500);tone(600,.9,"sine",.05,300);},
     click(){tone(500,.04,"square",.05);}
   };
@@ -223,14 +230,20 @@ const Sound = (()=>{
    SKILL DEFINITIONS (data driven)
    ========================================================= */
 const SKILLS = {
-  tp:      {name:"Teleport",  kind:"tp",   cd:2, range:3, el:"arcane", sub:"Sprung 3",       desc:"Springe auf ein freies Feld in bis zu 3 Feldern Entfernung."},
-  nova:    {name:"Eisnova",   kind:"self", cd:2, radius:2, dmg:15, el:"ice", sub:"R 2 · 15 · Frost",  desc:"Frostexplosion um dich. 15 Schaden, Gegner setzt einen Zug aus."},
-  ice:     {name:"Eiszapfen", kind:"line", cd:0, range:4, dmg:25, el:"ice",  sub:"Linie 4 · 25",       desc:"Gerader Schuss bis 4 Felder. 25 Schaden. Keine Abklingzeit."},
-  fire:    {name:"Feuerball", kind:"line", cd:1, range:4, dmg:20, splash:10, el:"fire", sub:"Linie 4 · 20 · Splash", desc:"Gerader Schuss. 20 Schaden, 10 Splash wenn er neben dem Gegner einschlägt."},
-  comet:   {name:"Eiskomet",  kind:"line", cd:2, range:5, dmg:20, el:"ice",  sub:"Linie 5 · 20 · Stoß",  desc:"Schwerer Komet. 20 Schaden und stößt den Gegner 1 Feld zurück."},
-  meteor:  {name:"Meteor",    kind:"area", cd:3, range:4, dmg:30, splash:15, el:"fire", sub:"Ziel 4 · 30/15",  desc:"Meteor auf ein Feld in 4 Feldern. 30 im Zentrum, 15 daneben."},
-  blizzard:{name:"Blizzard",  kind:"area", cd:2, range:3, dmg:10, el:"ice",  sub:"3×3 · 10 · Lähmt",    desc:"Schneesturm über 3×3 Feldern. 10 Schaden, Gegner hat nur 1 Schritt."}
+  tp:      {name:"Teleport", cat:"mob",  kind:"tp",   cd:2, range:3, el:"arcane", sub:"Sprung 3",       desc:"Springe auf ein freies Feld in bis zu 3 Feldern Entfernung."},
+  nova:    {name:"Eisnova", cat:"cc",   kind:"self", cd:2, radius:2, dmg:15, el:"ice", sub:"R 2 · 15 · Frost",  desc:"Frostexplosion um dich. 15 Schaden, Gegner setzt einen Zug aus."},
+  ice:     {name:"Eiszapfen", cat:"dmg", kind:"line", cd:0, range:4, dmg:25, el:"ice",  sub:"Linie 4 · 25",       desc:"Gerader Schuss bis 4 Felder. 25 Schaden. Keine Abklingzeit."},
+  fire:    {name:"Feuerball", cat:"dmg", kind:"line", cd:1, range:4, dmg:20, splash:10, el:"fire", sub:"Linie 4 · 20 · Splash", desc:"Gerader Schuss. 20 Schaden, 10 Splash wenn er neben dem Gegner einschlägt."},
+  comet:   {name:"Eiskomet", cat:"dmg",  kind:"line", cd:2, range:5, dmg:20, el:"ice",  sub:"Linie 5 · 20 · Stoß",  desc:"Schwerer Komet. 20 Schaden und stößt den Gegner 1 Feld zurück."},
+  meteor:  {name:"Meteor", cat:"dmg",    kind:"area", cd:3, range:4, dmg:30, splash:15, el:"fire", sub:"Ziel 4 · 30/15",  desc:"Meteor auf ein Feld in 4 Feldern. 30 im Zentrum, 15 daneben."},
+  blizzard:{name:"Blizzard", cat:"cc",  kind:"area", cd:2, range:3, dmg:10, el:"ice",  sub:"3×3 · 10 · Lähmt",    desc:"Schneesturm über 3×3 Feldern. 10 Schaden, Gegner hat nur 1 Schritt."}
 };
+Object.assign(SKILLS,{
+  armor:  {name:"Eisrüstung",  cat:"def", kind:"buff", cd:3, shield:20, el:"ice", sub:"Schild 20",      desc:"Schild fängt 20 Schaden ab bis zu deinem nächsten Zug. Nahkampf-Angreifer werden gelähmt."},
+  mirror: {name:"Frostspiegel",cat:"def", kind:"buff", cd:3, el:"ice", sub:"Reflektiert Linie",          desc:"Der nächste Linienzauber gegen dich wird auf den Angreifer zurückgeworfen."},
+  wall:   {name:"Eismauer",    cat:"def", kind:"wall", cd:3, range:3, el:"ice", sub:"Wand · 2 Züge",    desc:"Erschafft eine Eiswand in bis zu 3 Feldern. Blockiert Laufen und Linienzauber für 2 gegnerische Züge."}
+});
+const CATS = {dmg:"Schaden", cc:"Kontrolle", mob:"Bewegung", def:"Verteidigung"};
 const SKILL_IDS = Object.keys(SKILLS);
 const DEFAULT_LOADOUT = [["ice","nova","tp"],["fire","meteor","tp"]];
 
@@ -239,13 +252,14 @@ const DEFAULT_LOADOUT = [["ice","nova","tp"],["fire","meteor","tp"]];
    ========================================================= */
 const Logic = {
   create(mode,loadouts){
-    const mk=(id,name,x,y,skills)=>({id,name,x,y,hp:100,frozen:false,slow:false,skills:[...skills],
+    const mk=(id,name,x,y,skills)=>({id,name,x,y,hp:100,frozen:false,slow:false,shield:0,mirror:false,skills:[...skills],
       cd:Object.fromEntries(skills.map(k=>[k,0])),fresh:Object.fromEntries(skills.map(k=>[k,false]))});
-    return { mode, over:false, winner:-1, active:0, round:1, steps:2, maxSteps:2, used:{}, _skipping:false,
+    return { mode, over:false, winner:-1, active:0, round:1, steps:2, maxSteps:2, used:{}, _skipping:false, walls:[],
       units:[ mk(0,"Frost-Magierin",1,4,loadouts[0]), mk(1,"Abgrund-Dämon",3,0,loadouts[1]) ] };
   },
-  clone(s){ return {...s, used:{...s.used}, units:s.units.map(u=>({...u,skills:u.skills,cd:{...u.cd},fresh:{...u.fresh}}))}; },
-  occupied(s,x,y){return s.units.some(u=>u.hp>0&&u.x===x&&u.y===y);},
+  clone(s){ return {...s, used:{...s.used}, walls:s.walls.map(w=>({...w})), units:s.units.map(u=>({...u,skills:u.skills,cd:{...u.cd},fresh:{...u.fresh}}))}; },
+  occupied(s,x,y){return s.units.some(u=>u.hp>0&&u.x===x&&u.y===y)||this.wallAt(s,x,y);},
+  wallAt(s,x,y){return s.walls.some(w=>w.x===x&&w.y===y);},
   me(s){return s.units[s.active];}, foe(s){return s.units[1-s.active];},
   has(list,x,y){return list.some(p=>p.x===x&&p.y===y);},
   moveTargets(s){
@@ -262,10 +276,16 @@ const Logic = {
     const u=this.me(s), d=SKILLS[id], r=[];
     if(d.kind==="tp"){ for(let x=0;x<N;x++)for(let y=0;y<N;y++){const c=cheb(u,{x,y}); if(c>=1&&c<=d.range&&!this.occupied(s,x,y))r.push({x,y});} return r; }
     if(d.kind==="self") return cheb(u,this.foe(s))<=d.radius?[{x:u.x,y:u.y}]:[];
+    if(d.kind==="buff") return [{x:u.x,y:u.y}];
+    if(d.kind==="wall"){ for(let x=0;x<N;x++)for(let y=0;y<N;y++){const c=cheb(u,{x,y}); if(c>=1&&c<=d.range&&!this.occupied(s,x,y))r.push({x,y});} return r; }
     if(d.kind==="line") return this.lineTiles(u,d.range);
     if(d.kind==="area"){ for(let x=0;x<N;x++)for(let y=0;y<N;y++){const c=cheb(u,{x,y}); if(c>=1&&c<=d.range)r.push({x,y});} return r; }
     return r;
   },
+  // all damage goes through here: shield absorbs first, melee attackers get slowed by the armor
+  hurt(s,t,dmg,att){ let ab=0, attSlowed=false;
+    if(t.shield>0){ ab=Math.min(t.shield,dmg); t.shield-=ab; dmg-=ab; if(ab>0&&att&&cheb(t,att)===1){att.slow=true;attSlowed=true;} }
+    this.damage(s,t,dmg); return {dealt:dmg,absorbed:ab,attSlowed}; },
   damage(s,u,d){u.hp=Math.max(0,u.hp-d); if(u.hp===0){s.over=true; s.winner=1-u.id;}},
   move(s,x,y){ if(s.over||!this.has(this.moveTargets(s),x,y))return null;
     const u=this.me(s), from={x:u.x,y:u.y}; u.x=x;u.y=y; s.steps--; return {from}; },
@@ -273,16 +293,23 @@ const Logic = {
   use(s,id,x,y){
     if(s.over) return null;
     const d=SKILLS[id], u=this.me(s), f=this.foe(s);
-    if(d.kind==="self"){ x=u.x; y=u.y; }
+    if(d.kind==="self"||d.kind==="buff"){ x=u.x; y=u.y; }
     if(!this.has(this.targets(s,id),x,y)) return null;
     const res={id,from:{x:u.x,y:u.y},x,y,dmg:0,hit:false,froze:false,slowed:false,push:null,tiles:[]};
     s.used[id]=true; u.cd[id]=d.cd; u.fresh[id]=d.cd>0;
     if(d.kind==="tp"){ u.x=x; u.y=y; return res; }
+    if(id==="armor"){ u.shield=d.shield; return res; }
+    if(id==="mirror"){ u.mirror=true; return res; }
+    if(d.kind==="wall"){ s.walls=s.walls.filter(w=>w.owner!==u.id); s.walls.push({x,y,ttl:4,owner:u.id}); return res; }
     if(d.kind==="self"){ res.tiles=this.area(u,d.radius).filter(p=>!(p.x===u.x&&p.y===u.y)); res.hit=true; res.dmg=d.dmg; }
     if(d.kind==="line"){
       const dx=Math.sign(x-u.x), dy=Math.sign(y-u.y), len=cheb(u,{x,y});
       res.x=x; res.y=y;
-      for(let k=1;k<=len;k++){const px=u.x+dx*k,py=u.y+dy*k; if(f.x===px&&f.y===py){res.hit=true;res.x=px;res.y=py;break;}}
+      for(let k=1;k<=len;k++){const px=u.x+dx*k,py=u.y+dy*k;
+        if(this.wallAt(s,px,py)){res.blocked=true;res.x=px;res.y=py;break;}
+        if(f.x===px&&f.y===py){res.hit=true;res.x=px;res.y=py;break;}}
+      if(res.hit&&f.mirror){ f.mirror=false; res.hit=false; res.reflected=true; res.tiles=[{x:res.x,y:res.y}];
+        const h=this.hurt(s,u,d.dmg,f); res.selfDmg=h.dealt; res.selfAbsorbed=h.absorbed; return res; }
       if(res.hit){ res.dmg=d.dmg;
         if(id==="comet"){const nx=f.x+dx,ny=f.y+dy; if(inB(nx,ny)&&!this.occupied(s,nx,ny)) res.push={from:{x:f.x,y:f.y},to:{x:nx,y:ny}};}
       } else if(d.splash&&cheb(f,{x:res.x,y:res.y})===1) res.dmg=d.splash;
@@ -294,7 +321,7 @@ const Logic = {
       if(id==="blizzard"&&c<=1){ res.dmg=d.dmg; }
       res.hit=res.dmg>0;
     }
-    if(res.dmg>0) this.damage(s,f,res.dmg);
+    if(res.dmg>0){ const h=this.hurt(s,f,res.dmg,u); res.absorbed=h.absorbed; res.dealt=h.dealt; res.attSlowed=h.attSlowed; }
     if(f.hp>0&&res.hit){
       if(id==="nova"){ f.frozen=true; res.froze=true; }
       if(id==="blizzard"){ f.slow=true; res.slowed=true; }
@@ -310,11 +337,13 @@ const Logic = {
     s._skipping=false;
     s.active=1-s.active; if(s.active===0) s.round++;
     s.used={}; s.steps=2; s.maxSteps=2;
-    const u=this.me(s);
+    s.walls.forEach(w=>w.ttl--); s.walls=s.walls.filter(w=>w.ttl>0);
+    const u=this.me(s); u.shield=0; u.mirror=false;
     if(u.frozen){ s._skipping=true; s.steps=0; for(const k of u.skills) s.used[k]=true; }
     else if(u.slow){ u.slow=false; s.steps=1; s.maxSteps=1; }
   },
   skillUseful(s,id){ const t=this.targets(s,id); if(!t.length) return false;
+    if(SKILLS[id].kind==="buff"||SKILLS[id].kind==="wall") return false;
     if(SKILLS[id].kind==="self") return true; return true; },
   turnExhausted(s){ return s.steps===0 && !this.me(s).skills.some(k=>this.skillUseful(s,k)); }
 };
@@ -328,7 +357,7 @@ const AI = {
     let frontier=[res[0]];
     for(let d=0; d<max; d++){ const nf=[];
       for(const p of frontier)for(const [dx,dy] of DIRS){const x=p.x+dx,y=p.y+dy,k=x+","+y;
-        if(!inB(x,y)||seen.has(k)||(f.x===x&&f.y===y))continue; seen.add(k); const n={x,y,path:[...p.path,{x,y}]}; res.push(n); nf.push(n);}
+        if(!inB(x,y)||seen.has(k)||(f.x===x&&f.y===y)||Logic.wallAt(s,x,y))continue; seen.add(k); const n={x,y,path:[...p.path,{x,y}]}; res.push(n); nf.push(n);}
       frontier=nf; }
     return res;
   },
@@ -357,9 +386,10 @@ const AI = {
   greedy(s){
     const out=[];
     for(;;){ let best=null;
-      for(const id of Logic.me(s).skills){ if(id==="tp") continue;
-        for(const t of Logic.targets(s,id)){ const c=Logic.clone(s); const r=Logic.use(c,id,t.x,t.y); if(!r||!r.hit&&!r.dmg) continue;
-          const v=r.dmg*4+(r.froze?22:0)+(r.slowed?8:0)+(r.push?1:0)+(c.over?1e5:0)-(SKILLS[id].cd*0.5);
+      for(const id of Logic.me(s).skills){ if(id==="tp"||SKILLS[id].kind==="buff"||SKILLS[id].kind==="wall") continue;
+        for(const t of Logic.targets(s,id)){ const c=Logic.clone(s); const r=Logic.use(c,id,t.x,t.y); if(!r) continue;
+          const lost=(Logic.foe(s).hp-Logic.foe(c).hp)-(Logic.me(s).hp-Logic.me(c).hp); if(lost<=0&&!r.froze&&!r.slowed) continue;
+          const v=lost*4+(r.froze?22:0)+(r.slowed?8:0)+(r.push?1:0)+(c.over?1e5:0)-(SKILLS[id].cd*0.5);
           if(!best||v>best.v) best={v,id,x:t.x,y:t.y}; } }
       if(!best) break; Logic.use(s,best.id,best.x,best.y); out.push({id:best.id,x:best.x,y:best.y}); if(s.over) break; }
     return out;
@@ -367,7 +397,7 @@ const AI = {
   evaluate(s0,s,me,usedTp){
     const foe=Logic.foe(s), foe0=Logic.foe(s0);
     if(foe.hp<=0) return 100000;
-    let sc=(foe0.hp-foe.hp)*4+(foe.frozen&&!foe0.frozen?22:0)+(foe.slow&&!foe0.slow?8:0);
+    let sc=(foe0.hp-foe.hp)*4-(Logic.me(s0).hp-Logic.me(s).hp)*4+(foe.frozen&&!foe0.frozen?22:0)+(foe.slow&&!foe0.slow?8:0);
     sc -= this.threat(me,foe,foe.frozen)*(Logic.me(s).hp<=40?1.6:1)*0.8;
     const d=cheb(me,foe); if(d>=2&&d<=3) sc+=3; if(d===1&&!foe.frozen) sc-=2;
     if(usedTp) sc-=3;
@@ -520,12 +550,31 @@ const R = (()=>{
     if(isW){ctx.fillStyle=`rgba(127,224,255,${.6+.4*Math.sin(time/170)})`;ctx.shadowColor="#38BDF8";ctx.shadowBlur=8;ctx.fillRect(-sw/2+7*px,-sh+5*px,px,px);ctx.fillRect(-sw/2+9*px,-sh+5*px,px,px);ctx.shadowBlur=0;}
     if(v.flash>0){ctx.globalAlpha=v.flash*v.alpha;ctx.drawImage(isW?baked.warriorW:baked.demonW,-sw/2,-sh,sw,sh);}
     ctx.restore();
+    if(u.shield>0&&v.dead===0){ const p=.5+.5*Math.sin(time/250);
+      ctx.save();ctx.strokeStyle=`rgba(127,224,255,${.55+.3*p})`;ctx.fillStyle="rgba(56,189,248,.12)";ctx.lineWidth=2;ctx.shadowColor="#38BDF8";ctx.shadowBlur=12;
+      ctx.beginPath();ctx.ellipse(c.x,c.y-sh*.48,sw*.68,sh*.62,0,0,7);ctx.fill();ctx.stroke();
+      ctx.shadowBlur=0;ctx.strokeStyle="rgba(217,244,255,.35)";ctx.lineWidth=1;for(let k=0;k<6;k++){const a=k/6*Math.PI*2+time/1500;ctx.beginPath();ctx.moveTo(c.x,c.y-sh*.48);ctx.lineTo(c.x+Math.cos(a)*sw*.68,c.y-sh*.48+Math.sin(a)*sh*.62);ctx.stroke();}
+      ctx.restore(); }
+    if(u.mirror&&v.dead===0){ ctx.save(); for(let k=0;k<4;k++){const a=time/600+k*Math.PI/2; const mx=c.x+Math.cos(a)*sw*.75, my=c.y-sh*.45+Math.sin(a)*sh*.25;
+      ctx.fillStyle="rgba(230,245,255,.85)";ctx.strokeStyle="#7fe0ff";ctx.shadowColor="#d9f4ff";ctx.shadowBlur=10;
+      ctx.beginPath();ctx.moveTo(mx,my-px*3);ctx.lineTo(mx+px*1.5,my);ctx.lineTo(mx,my+px*3);ctx.lineTo(mx-px*1.5,my);ctx.closePath();ctx.fill();ctx.stroke();} ctx.restore(); }
     // ice block
     if(u.frozen&&v.dead===0){ const bw=sw*1.15,bh=sh*1.1,x=c.x-bw/2,y=c.y-bh+px;
       ctx.save(); ctx.fillStyle="rgba(140,210,255,.28)"; ctx.strokeStyle="rgba(217,244,255,.85)"; ctx.lineWidth=1.5;
       ctx.beginPath();ctx.moveTo(x+bw*.1,y);ctx.lineTo(x+bw*.9,y+bh*.05);ctx.lineTo(x+bw,y+bh*.6);ctx.lineTo(x+bw*.85,y+bh);ctx.lineTo(x+bw*.1,y+bh*.95);ctx.lineTo(x,y+bh*.4);ctx.closePath();ctx.fill();ctx.stroke();
       ctx.strokeStyle="rgba(255,255,255,.7)";ctx.beginPath();ctx.moveTo(x+bw*.2,y+bh*.15);ctx.lineTo(x+bw*.35,y+bh*.5);ctx.moveTo(x+bw*.7,y+bh*.2);ctx.lineTo(x+bw*.8,y+bh*.35);ctx.stroke();
       const sp=(time/90|0)%20; ctx.fillStyle="#fff";ctx.fillRect(x+bw*(sp/20),y+bh*.1,2,2); ctx.restore(); }
+  }
+  function drawWall(w,time){
+    const h=TW*.55, t=P(w.x+.1,w.y+.1),r=P(w.x+.9,w.y+.1),b=P(w.x+.9,w.y+.9),l=P(w.x+.1,w.y+.9); const a=w.ttl<=1?.55+.25*Math.sin(time/90):.85;
+    ctx.save(); ctx.globalAlpha=a;
+    ctx.fillStyle="rgba(40,110,160,.75)";ctx.beginPath();ctx.moveTo(l.x,l.y);ctx.lineTo(b.x,b.y);ctx.lineTo(b.x,b.y-h);ctx.lineTo(l.x,l.y-h);ctx.fill();
+    ctx.fillStyle="rgba(70,160,210,.75)";ctx.beginPath();ctx.moveTo(b.x,b.y);ctx.lineTo(r.x,r.y);ctx.lineTo(r.x,r.y-h);ctx.lineTo(b.x,b.y-h);ctx.fill();
+    ctx.fillStyle="rgba(200,240,255,.85)";ctx.beginPath();ctx.moveTo(t.x,t.y-h);ctx.lineTo(r.x,r.y-h);ctx.lineTo(b.x,b.y-h);ctx.lineTo(l.x,l.y-h);ctx.fill();
+    ctx.strokeStyle="#d9f4ff";ctx.lineWidth=1.5;ctx.shadowColor="#38BDF8";ctx.shadowBlur=10;
+    ctx.beginPath();ctx.moveTo(l.x,l.y-h);ctx.lineTo(l.x,l.y);ctx.lineTo(b.x,b.y);ctx.lineTo(r.x,r.y);ctx.lineTo(r.x,r.y-h);ctx.moveTo(b.x,b.y);ctx.lineTo(b.x,b.y-h);ctx.stroke();
+    ctx.shadowBlur=0;ctx.strokeStyle="rgba(255,255,255,.8)";ctx.beginPath();ctx.moveTo(l.x+TW*.08,l.y-h*.8);ctx.lineTo(l.x+TW*.14,l.y-h*.3);ctx.moveTo(b.x+TW*.1,b.y-h*.7);ctx.lineTo(b.x+TW*.18,b.y-h*.45);ctx.stroke();
+    ctx.restore();
   }
   function torch(x,y,time){
     const f=.75+.15*Math.sin(time/90)+.1*Math.sin(time/37);
@@ -551,8 +600,9 @@ const R = (()=>{
       ctx.beginPath();ctx.ellipse(c.x,c.y,TW*2.6*p,TW*1.3*p,0,0,7);ctx.stroke();
       ctx.fillStyle=`rgba(56,189,248,${.18*(1-p)})`;ctx.fill();ctx.shadowBlur=0;}
     // units in depth order
-    const us=view.units.slice().sort((a,b)=>(a.v.rx+a.v.ry)-(b.v.rx+b.v.ry));
-    for(const o of us) drawUnit(o.u,o.v,time,o.active,o.foeV);
+    const items=[...view.units.map(o=>({d:o.v.rx+o.v.ry,f:()=>drawUnit(o.u,o.v,time,o.active,o.foeV)})),
+      ...view.walls.map(w=>({d:w.x+w.y-.01,f:()=>drawWall(w,time)}))].sort((a,b)=>a.d-b.d);
+    for(const it of items) it.f();
     // bolts (icicles)
     for(let k=bolts.length-1;k>=0;k--){const bl=bolts[k];const p=clamp((time-bl.t0)/bl.dur,0,1);
       const b=P(bl.b.x+.5,bl.b.y+.5); const sky=bl.kind==="meteor"; const a=sky?{x:b.x-TW*1.6,y:b.y-TW*4.5}:P(bl.a.x+.5,bl.a.y+.5);
@@ -637,11 +687,19 @@ const ICONS={
   meteor:'<path d="M2 4l14 14M8 2l12 12M2 10l11 11" stroke="#ff5a1a" stroke-width="2" opacity=".7"/><circle cx="21" cy="21" r="8" fill="#4a2a1a" stroke="#ff7a1a" stroke-width="2"/><circle cx="19" cy="19" r="2" fill="#ffb060"/>',
   blizzard:'<g stroke="#d9f4ff" stroke-width="2"><path d="M8 6v8M4 10h8M24 4v8M20 8h8M16 18v10M11 23h10M12 19l8 8M20 19l-8 8"/></g><path d="M2 16q7-5 14 0t14 0" stroke="#38BDF8" fill="none" stroke-width="2"/>'
 };
+Object.assign(ICONS,{
+  armor:'<path d="M16 3l11 4v8c0 7-5 12-11 14C10 27 5 22 5 15V7z" fill="#14324a" stroke="#7fe0ff" stroke-width="2"/><path d="M16 8v16M10 14h12" stroke="#d9f4ff" stroke-width="2"/>',
+  mirror:'<path d="M16 2l9 14-9 14-9-14z" fill="#cfe9f7" stroke="#38BDF8" stroke-width="2"/><path d="M12 12l4-6M13 18l6-8" stroke="#fff" stroke-width="1.5"/><path d="M2 9l6 3M30 23l-6-3" stroke="#7fe0ff" stroke-width="2"/>',
+  wall:'<path d="M5 12l11-5 11 5v12l-11 5-11-5z" fill="#1e5a82" stroke="#d9f4ff" stroke-width="2"/><path d="M5 12l11 5 11-5M16 17v12" stroke="#7fe0ff" stroke-width="1.5"/>'
+});
 const ELCOL={ice:["#d9f4ff","#38BDF8","#ffffff","#7fe0ff"],fire:["#ffe08a","#ff7a1a","#ff3a0a","#8A0303"],arcane:["#e6dcff","#a98cff","#3a2a6a"]};
 const SkillFX = {
   async play(id,uid,r,s){
     const foeId=1-uid, d=SKILLS[id], col=ELCOL[d.el];
     if(d.kind==="tp") return Anim.teleport(uid,r.from,{x:r.x,y:r.y});
+    if(d.kind==="buff"){ id==="armor"?Sound.fx.armor():Sound.fx.mirror(); R.ring(r.from.x,r.from.y,"rgba(127,224,255,A)"); R.burst(r.from.x,r.from.y,30,col,2.5,.5);
+      await Anim.cast(uid); Game.toast(id==="armor"?"Eisrüstung: Schild 20.":"Frostspiegel aktiv.","info"); return; }
+    if(d.kind==="wall"){ Sound.fx.wall(); R.burst(r.x,r.y,40,col,3,.3); R.tile(r.x,r.y,"frost",700); R.shake(4); await Anim.cast(uid); return; }
     if(d.kind==="self"){ await Anim.cast(uid); Sound.fx.nova(); R.wave(r.from.x,r.from.y); $("#flash").style.background="#bfeaff"; Effects.flash(.45); R.shake(6);
       R.burst(r.from.x,r.from.y,60,col,4.5,.3); r.tiles.forEach(p=>R.tile(p.x,p.y,"frost",700)); await sleep(180); }
     if(d.kind==="line"){
@@ -652,7 +710,13 @@ const SkillFX = {
       R.burst(r.x,r.y,id==="ice"?26:40,col,id==="ice"?3.5:4.5,.45);
       if(d.el==="fire"){ Sound.fx.explode(); R.tile(r.x,r.y,"hit",500); }
       else if(r.hit) Sound.fx.iceHit();
-      if(!r.dmg){ Game.toast("Verfehlt!","info"); }
+      if(r.blocked&&!r.dmg){ Game.toast("Von der Eismauer geblockt!","info"); }
+      else if(r.reflected){ Sound.fx.reflect(); R.ring(r.x,r.y,"rgba(230,245,255,A)"); R.bolt({x:r.x,y:r.y},r.from,(id==="comet"?120:90)*cheb(r.from,r)+80,id);
+        await sleep((id==="comet"?120:90)*cheb(r.from,r)+80); Game.toast("Zurückgeworfen!","info"); R.burst(r.from.x,r.from.y,30,col,4,.45);
+        if(r.selfAbsorbed) Sound.fx.absorb();
+        if(r.selfDmg>0){ await Anim.hit(uid); Game.refresh(); if(Game.s.units[uid].hp===0) return Anim.die(uid); }
+        return; }
+      else if(!r.dmg){ Game.toast("Verfehlt!","info"); }
     }
     if(d.kind==="area"){
       if(id==="meteor"){ Sound.fx.meteorFall(); R.bolt({x:r.x,y:r.y},{x:r.x,y:r.y},650,"meteor"); await sleep(650);
@@ -662,7 +726,9 @@ const SkillFX = {
       if(!r.dmg) Game.toast("Verfehlt!","info");
     }
     if(r.dmg>0){
-      await Anim.hit(foeId); Game.refresh();
+      if(r.absorbed){ Sound.fx.absorb(); R.ring(Game.s.units[foeId].x,Game.s.units[foeId].y,"rgba(127,224,255,A)"); Game.toast("Eisrüstung absorbiert "+r.absorbed+"."+(r.attSlowed?" Angreifer gelähmt!":""),"info"); }
+      if(r.dealt>0) await Anim.hit(foeId); else await sleep(300);
+      Game.refresh();
       if(Game.s.units[foeId].hp===0) return Anim.die(foeId);
       if(r.push) await Anim.move(foeId,r.push.from,r.push.to,true);
       if(r.froze) await Anim.freeze(foeId,Game.s.units[foeId].x,Game.s.units[foeId].y);
@@ -700,12 +766,13 @@ const Game = {
       if(d.kind==="tp") set(t,{fill:"rgba(120,80,220,A)",a:.22,stroke:"#a98cff",dot:true});
       if(d.kind==="self"){ set(Logic.area(me,d.radius).filter(p=>!(p.x===me.x&&p.y===me.y)),{fill:"rgba(56,189,248,A)",a:.18,stroke:"rgba(56,189,248,.55)"}); if(t.length) m.set(f.x+","+f.y,red); }
       if(d.kind==="line"){ const fire=d.el==="fire"; set(t,{fill:fire?"rgba(255,120,30,A)":"rgba(56,189,248,A)",a:.12,stroke:fire?"rgba(255,150,60,.5)":"rgba(127,224,255,.5)"}); if(Logic.has(t,f.x,f.y)) m.set(f.x+","+f.y,red); }
+      if(d.kind==="wall") set(t,{fill:"rgba(150,220,255,A)",a:.18,stroke:"#d9f4ff",dot:true});
       if(d.kind==="area"){ const fire=d.el==="fire"; set(t,{fill:fire?"rgba(255,120,30,A)":"rgba(150,220,255,A)",a:.1,stroke:fire?"rgba(255,150,60,.45)":"rgba(200,240,255,.45)"});
         if(Logic.has(t,f.x,f.y)) m.set(f.x+","+f.y,red); }
     }
     return m;
   },
-  view(){const s=this.s;return{hl:this.highlights(),units:s.units.map((u,i)=>({u,v:Anim.v[i],active:s.active===i&&!s.over,foeV:Anim.v[1-i]}))};},
+  view(){const s=this.s;return{hl:this.highlights(),walls:s.walls,units:s.units.map((u,i)=>({u,v:Anim.v[i],active:s.active===i&&!s.over,foeV:Anim.v[1-i]}))};},
   buildSkills(me){
     const key=me.id+":"+me.skills.join(","); if(key===this.skillKey) return; this.skillKey=key;
     const box=$("#skills"); box.innerHTML="";
@@ -718,7 +785,8 @@ const Game = {
     s.units.forEach((u,i)=>{const p=$("#p"+i);p.querySelector(".v").textContent=u.hp;
       p.querySelector(".bar i").style.transform=`scaleX(${u.hp/100})`;p.querySelector(".orb i").style.height=u.hp+"%";
       p.classList.toggle("frozen",u.frozen);p.classList.toggle("active",s.active===i&&!s.over);
-      p.querySelector(".badge").textContent=u.frozen?"❄ EIS":"LAHM"; p.classList.toggle("slowed",u.slow&&!u.frozen);});
+      const tags=[u.frozen?"❄ EIS":"",u.slow?"LAHM":"",u.shield?"◈"+u.shield:"",u.mirror?"SPIEGEL":""].filter(Boolean);
+      const bd=p.querySelector(".badge"); bd.textContent=tags.join(" "); p.classList.toggle("slowed",tags.length>0&&!u.frozen);});
     const me=Logic.me(s);
     const shown=(this.mode==="ai")?s.units[0]:me; this.buildSkills(shown);
     $("#round").textContent="RUNDE "+s.round;
@@ -738,6 +806,7 @@ const Game = {
     if(m==="move"&&s.steps===0) return this.invalid("Keine Schritte mehr.");
     if(m!=="move"&&s.used[m]) return this.invalid("In diesem Zug schon eingesetzt.");
     if(m!=="move"&&me.cd[m]>0) return this.invalid("Abklingzeit: "+me.cd[m]+" Züge.");
+    if(m!=="move"&&SKILLS[m].kind==="buff"){ this.ui.mode=null; return this.cast(m,me.x,me.y); }
     Sound.fx.click(); this.ui.mode=this.ui.mode===m?null:m;
     if(this.ui.mode&&SKILLS[m]&&SKILLS[m].kind==="self") this.toast(Logic.targets(s,m).length?"Gegner antippen zum Wirken.":"Gegner außer Reichweite ("+SKILLS[m].radius+").", Logic.targets(s,m).length?"info":"");
     this.refresh();
@@ -826,10 +895,11 @@ const Picker = {
     $("#pickT").textContent=(pid===0?"Frost-Magierin":"Abgrund-Dämon")+": Zauber wählen";
     el.className="show "+(pid===0?"ice":"");
     const draw=()=>{ grid.innerHTML="";
-      SKILL_IDS.forEach(k=>{const d=SKILLS[k];const c=document.createElement("button");c.className="pc"+(sel.includes(k)?" on":"");
+      for(const cat of Object.keys(CATS)){ const hdr=document.createElement("div");hdr.className="pcat";hdr.textContent=CATS[cat];grid.appendChild(hdr);
+      SKILL_IDS.filter(k=>SKILLS[k].cat===cat).forEach(k=>{const d=SKILLS[k];const c=document.createElement("button");c.className="pc"+(sel.includes(k)?" on":"");
         c.innerHTML=`<svg viewBox="0 0 32 32">${ICONS[k]}</svg><div><b>${d.name}</b><i>${d.sub}${d.cd?" · CD "+d.cd:""}</i><span>${d.desc}</span></div>`;
         c.onclick=()=>{Sound.unlock();Sound.fx.click(); if(sel.includes(k)) sel=sel.filter(x=>x!==k); else if(sel.length<3) sel.push(k); else {sel.shift();sel.push(k);} draw();};
-        grid.appendChild(c);});
+        grid.appendChild(c);}); }
       btn.disabled=sel.length!==3; btn.textContent=sel.length===3?"KAMPF BEGINNEN":`NOCH ${3-sel.length} WÄHLEN`; };
     draw();
     btn.onclick=()=>{ if(sel.length!==3) return; Sound.unlock(); Game.loadouts[pid]=SKILL_IDS.filter(k=>sel.includes(k)); el.className=""; btn.onclick=null; res(); };
