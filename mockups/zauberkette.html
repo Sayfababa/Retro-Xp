@@ -32,7 +32,7 @@ html,body{height:100dvh;width:100vw;overflow:hidden;background:var(--bg);color:v
 .hpnum{font-family:var(--pix);font-size:11px;font-weight:700}
 #mid{padding:6px 10px;text-align:center;display:flex;flex-direction:column;justify-content:center;font-size:9px;letter-spacing:.18em;color:var(--gold)}
 #mid b{font-size:14px;color:var(--frost);letter-spacing:.05em}
-.chips{display:flex;flex-wrap:wrap;gap:3px;min-height:15px}
+.chips{display:flex;flex-wrap:wrap;align-content:flex-start;gap:3px;height:32px;overflow:hidden}
 .chip{font-family:var(--pix);font-size:10px;font-weight:700;padding:0 4px;border:1px solid;line-height:13px;white-space:nowrap}
 .c-chill{color:#bfe9ff;border-color:#38BDF8;background:#0e3550}
 .c-frozen{color:#062033;border-color:#d9f4ff;background:#9be0ff}
@@ -53,6 +53,10 @@ html,body{height:100dvh;width:100vw;overflow:hidden;background:var(--bg);color:v
 .slot svg{width:28px;height:28px}
 .slot span{font-size:8.5px;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;padding:0 2px}
 .slot em{position:absolute;top:1px;right:3px;font-style:normal;font-family:var(--pix);font-size:10px;font-weight:700}
+.rbar{grid-column:2/-1;display:grid;grid-template-columns:repeat(4,1fr);gap:5px;height:14px}
+.rbar i{font-style:normal;background:#1a1410;border:1px solid #3a2f25;font-size:8px;letter-spacing:.08em;color:#120e0c;display:flex;align-items:center;justify-content:center;font-family:var(--pix);font-weight:700}
+.rbar i.done{background:#3a2f25}
+.rbar i.now{background:linear-gradient(90deg,#a88446,#ffd24a,#a88446);border-color:#ffd24a;box-shadow:0 0 10px #ffd24a88}
 .slot.e{border-color:#5a1a14;background:#150807}
 .slot.e em{color:#ff8a6a}
 .slot.heavy{box-shadow:inset 0 0 0 1px #ff5a3a}
@@ -114,6 +118,12 @@ h3::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,#A884468
 .tn .pips i{width:9px;height:9px;transform:rotate(45deg);border:1px solid #6b5226;background:#120e0c}
 .tn .pips i.on{background:#d8b56c;box-shadow:0 0 6px #d8b56c}
 .tn.max{opacity:.75}
+h3.g-ice{color:#7fd4ff}h3.g-ice::after{background:linear-gradient(90deg,#38BDF888,transparent)}
+h3.g-fire{color:#ff9a4a}h3.g-fire::after{background:linear-gradient(90deg,#ff6a1a88,transparent)}
+.tn.g-ice{border-color:#1e4a66;background:linear-gradient(180deg,#0e2030,#08121a)}.tn.g-ice b{color:#9be0ff}
+.tn.g-ice .pips i{border-color:#2a6a90}.tn.g-ice .pips i.on{background:#38BDF8;box-shadow:0 0 6px #38BDF8}
+.tn.g-fire{border-color:#6a2a10;background:linear-gradient(180deg,#2a140a,#140806)}.tn.g-fire b{color:#ffb070}
+.tn.g-fire .pips i{border-color:#8a3a10}.tn.g-fire .pips i.on{background:#ff7a2a;box-shadow:0 0 6px #ff7a2a}
 .tn.arm{border-color:#d8b56c;box-shadow:0 0 0 1px #d8b56c,0 0 12px #d8b56c66}
 #ptsBox{text-align:center;font-size:13px;letter-spacing:.1em}
 #ptsBox b{color:#ffd24a;font-size:18px}
@@ -161,7 +171,7 @@ h3::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,#A884468
   <div id="ptsBox"></div>
   <p class="note" style="text-align:center">Punkte sind dauerhaft. Antippen markiert, nochmal antippen bestätigt.</p>
   <div class="scroll" id="treeList"></div>
-  <button class="ab" id="bTreeX">ZURÜCK</button>
+  <div class="btnRow"><button class="ab" id="bTreeR">ZURÜCKSETZEN</button><button class="ab" id="bTreeX">ZURÜCK</button></div>
 </div></div>
 
 <!-- Regler -->
@@ -217,8 +227,8 @@ const SL=[
  ["Zustände",[["freezeThr","Unterkühlt: Stapel bis Einfrieren",1,6,1,""],["freezeImm","Immun nach Einfrieren",0,4,1," Z"],["burnDmg","Brand: Schaden je Stapel",1,10,1,""],["burnMax","Brand: max. Stapel",3,15,1,""],["vuln","Verwundbar: Mehrschaden",0,60,5,"%"],["vulnT","Verwundbar: Dauer",1,4,1," Z"]]],
  ["Gegner",[["eHp","Lebenspunkte",40,250,5,"%"],["eDmg","Schaden",40,250,5,"%"],["depthScale","Pro Tiefe stärker",0,60,5,"%"],["resist","Resistenz-Affix",10,90,5,"%"],["roundCap","Zeitlimit (Raserei ab Zug)",8,40,1,""]]]
 ];
-const DEF={heroHp:150,atk:12,critMult:200,freezeThr:3,freezeImm:2,burnDmg:3,burnMax:6,vuln:20,vulnT:2,eHp:100,eDmg:100,depthScale:25,resist:50,roundCap:20};
-let C={...DEF},P={depth:1,pts:0,earned:0,tree:{},chain:["nova","fire","thermo","meteor"]};
+const DEF={heroHp:150,atk:10,critMult:200,freezeThr:3,freezeImm:2,burnDmg:3,burnMax:6,vuln:20,vulnT:2,eHp:100,eDmg:100,depthScale:25,resist:50,roundCap:20};
+let C={...DEF},P={depth:1,pts:0,earned:0,tree:{},chain:["nova","grip","shatter","meteor"]};
 try{Object.assign(C,JSON.parse(localStorage.getItem("zk_c")||"{}"));Object.assign(P,JSON.parse(localStorage.getItem("zk_p")||"{}"));}catch(e){}
 const save=()=>{try{localStorage.setItem("zk_c",JSON.stringify(C));localStorage.setItem("zk_p",JSON.stringify(P));}catch(e){}};
 
@@ -235,7 +245,7 @@ const SPELLS={
  inferno:{n:"Feuersbrunst",i:"inferno",tags:["feuer","verb"],d:"Verbraucht Brand: Der gesamte restliche Brandschaden ×1,5 sofort."},
  meteor:{n:"Meteor",i:"meteor",tags:["feuer","einschlag"],d:"300 %. Macht das Ziel verwundbar."},
  thermo:{n:"Thermoschock",i:"thermo",tags:["kaelte","feuer","verb"],d:"Unterkühlt UND brennend: verbraucht beides, 200 % und Spröde. Sonst 60 %."},
- armor:{n:"Eisrüstung",i:"armor",tags:["kaelte","schutz"],d:"Schild 20. Bricht er, erhält der Angreifer +2 Unterkühlt."}
+ armor:{n:"Eisrüstung",i:"armor",tags:["kaelte","schutz"],d:"Schild 30. Bricht er, erhält der Angreifer +2 Unterkühlt."}
 };
 const SPELL_IDS=Object.keys(SPELLS);
 const TREE=[
@@ -325,7 +335,7 @@ function castSpell(F,id){
    case "ice": H(e.frozen?180:120); chill(F,1); echo(120); break;
    case "grip": H(60); if(e.chill>=1||e.frozen) freeze(F); else E(F,{t:"info",txt:"Frostgriff: Ziel war nicht unterkühlt."}); break;
    case "shatter":{const s=e.chill,fr=e.frozen; const p=(60+50*s)*(fr?2:1); if(s||fr)F.stats.consumed++; e.chill=T("glut")?Math.floor(s/2):0;
-     E(F,{t:"info",txt:`Zerschmettern verbraucht ${s} Unterkühlt${fr?" + Eingefroren":""}.`}); if(fr){e.frozen=false;e.thaw=false;e.imm=C.freezeImm;} H(p); echo(p); break;}
+     E(F,{t:"info",txt:`Zerschmettern verbraucht ${s} Unterkühlt${fr?" + Eingefroren":""}.`}); H(p); echo(p); break;}
    case "blizzard": F.dots.push({id,left:3+T("klang")}); E(F,{t:"info",txt:"Blizzard tobt."}); break;
    case "embers": F.dots.push({id,left:3+T("klang")}); E(F,{t:"info",txt:"Glutregen fällt."}); break;
    case "fire": H(140); burn(F,T("zunder")?3:2); echo(140); break;
@@ -336,7 +346,7 @@ function castSpell(F,id){
    case "thermo": if(e.chill>=1&&e.burn>=1){F.stats.consumed++;E(F,{t:"info",txt:`Thermoschock verbraucht ${e.chill} Unterkühlt + ${e.burn} Brand.`});
        e.chill=T("glut")?Math.floor(e.chill/2):0; e.burn=T("glut")?Math.floor(e.burn/2):0; H(200); e.brittle=true; E(F,{t:"info",txt:"Ziel ist spröde – der nächste Treffer ist kritisch."});}
      else H(60); break;
-   case "armor": F.h.shield+=Math.round(20*(1+0.5*T("panzer"))); E(F,{t:"shield"}); break;
+   case "armor": F.h.shield+=Math.round(30*(1+0.5*T("panzer"))); E(F,{t:"shield"}); break;
   }
   F.spellMult=1;
 }
@@ -354,7 +364,6 @@ function heroTurn(F){
   E(F,{t:"turn",who:0,slot});
   tickDots(F);
   if(F.e.hp>0) castSpell(F,id);
-  if(F.e.thaw){F.e.thaw=false;if(F.e.frozen){F.e.frozen=false;F.e.imm=C.freezeImm;E(F,{t:"info",txt:"Das Eis taut."});}}
   if(F.e.hp<=0){F.over="win";E(F,{t:"end"});}
   return F.ev;
 }
@@ -364,7 +373,7 @@ function enemyTurn(F){
   if(e.burn>0){const d=e.burn*(C.burnDmg+T("schwel"))*(F.foe.aff.includes("fireRes")?1-C.resist/100:1);const dd=Math.max(1,Math.round(d));
     e.hp=Math.max(0,e.hp-dd);F.stats.dmg+=dd;E(F,{t:"hit",dmg:dd,col:"burn",lab:"Brand",small:1,crit:false,abs:0});e.burn--;
     if(e.hp<=0){F.over="win";E(F,{t:"end"});return F.ev;}}
-  if(e.frozen){e.thaw=true;F.skipped.push(F.round);F.stats.skips++;E(F,{t:"skip",slot,step:st});}
+  if(e.frozen){e.frozen=false;e.imm=C.freezeImm;F.skipped.push(F.round);F.stats.skips++;E(F,{t:"skip",slot,step:st});}
   else{
     if(e.imm>0)e.imm--;
     const enr=F.round+1>=C.roundCap?2:1; if(enr===2&&F.round+1===C.roundCap)E(F,{t:"info",txt:"RASEREI! Der Gegner macht doppelten Schaden."});
@@ -386,9 +395,9 @@ function enemyTurn(F){
 }
 
 /* ================== DARSTELLUNG ================== */
-const cv=$("#cv"),cx=cv.getContext("2d"); let W=0,H=0,DPR=1;
+const cv=$("#cv"),cx=cv.getContext("2d"); let W=0,H=0,DPR=1,stageRef=0;
 function resize(){DPR=Math.min(3,window.devicePixelRatio||1);const r=cv.getBoundingClientRect();W=r.width;H=r.height;cv.width=W*DPR|0;cv.height=H*DPR|0;}
-window.addEventListener("resize",resize);
+window.addEventListener("resize",()=>{stageRef=0;resize();});
 const img={};
 function tint(src,fn){const c=document.createElement("canvas");c.width=src.width;c.height=src.height;const x=c.getContext("2d");x.drawImage(src,0,0);
   const d=x.getImageData(0,0,c.width,c.height),a=d.data;for(let i=0;i<a.length;i+=4){if(!a[i+3])continue;const o=fn(a[i],a[i+1],a[i+2]);a[i]=clamp(o[0],0,255);a[i+1]=clamp(o[1],0,255);a[i+2]=clamp(o[2],0,255);}
@@ -413,7 +422,7 @@ function drawFrame(time){
   for(const x of [W*.07,W*.93]){const f=.8+Math.sin(time/90+x)*.15;const rg=cx.createRadialGradient(x,H*.28,0,x,H*.28,H*.55*f);
     rg.addColorStop(0,"#ff9a3a2a");rg.addColorStop(1,"#0000");cx.fillStyle=rg;cx.fillRect(0,0,W,H);
     cx.fillStyle="#ffcf6a";cx.fillRect(x-2,H*.25-6*f,4,8*f);cx.fillStyle="#3a2a1a";cx.fillRect(x-1.5,H*.28,3,H*.12);}
-  const ph=Math.min(H*.62*.7,112);
+  if(!stageRef)stageRef=H;const ph=Math.min((stageRef||H)*.62*.7,112);
   for(const side of [0,1]){
     const im=side?img[F?F.foe.look:"demon"]||img.demon:img.queen; if(!im)continue;
     const p=pos(side),sc=Math.max(1,Math.round(ph/im.height*DPR))/DPR,w=im.width*sc,h=im.height*sc,l=lunge[side];lunge[side]*=.85;
@@ -485,6 +494,7 @@ function hud(cur){
 function drawChains(cur){
   const c=$("#chains"),slot=F.round%4;let s=`<div class="lab" style="color:#e8a08a">GEG-<br>NER</div>`;
   F.foe.steps.forEach((st,i)=>{s+=`<div class="slot e${st.heavy?" heavy":""}${cur&&i===slot&&cur.who===1?" cur":""}${cur&&cur.skip===i?" skip":""}">${svg(st.i)}<span>${st.n}</span>${st.dmg?`<em>${Math.round(st.dmg*(1+F.e.rage/100))}</em>`:""}</div>`;});
+  s+=`<div class="lab" style="color:var(--gold)">ZUG<br>${F.round+1}</div><div class="rbar">${[0,1,2,3].map(i=>`<i class="${i<slot?"done":i===slot?"now":""}">${i===slot?(cur?cur.who?"▲ GEGNER":"▼ DU":"JETZT"):""}</i>`).join("")}</div>`;
   s+=`<div class="lab" style="color:var(--frost)">DU</div>`;
   F.chain.forEach((id,i)=>{s+=`<div class="slot h${cur&&i===slot&&cur.who===0?" cur":""}">${svg(SPELLS[id].i)}<span>${SPELLS[id].n}</span><em style="color:#7fe0ff">${i+1}</em></div>`;});
   c.innerHTML=s;
@@ -512,8 +522,8 @@ async function playEvents(ev,who){
   }
   hud();
 }
-async function fight(fast){
-  if(playing)return; playing=true; $("#bPlay").disabled=true; skipAll=!!fast;
+async function fight(){
+  if(playing)return; playing=true; $("#bPlay").disabled=true; skipAll=false;
   while(!F.over){
     await playEvents(heroTurn(F),0); if(F.over)break; await W8(260);
     await playEvents(enemyTurn(F),1); await W8(300);
@@ -564,14 +574,14 @@ $("#bGo").onclick=()=>{Sound.unlock();P.chain=[...draft];save();F=newFight(F.foe
   log(`${F.foe.n} erwartet dich.`,"t");$("#bPlay").disabled=false;$("#bPlay").textContent="▶ KAMPF";};
 $("#bPlay").onclick=()=>{Sound.unlock();fight();};
 $("#bSpeed").onclick=()=>{speed=speed>=4?1:speed*2;$("#bSpeed").textContent=speed+"×";};
-$("#bSkip").onclick=()=>{if(playing)skipAll=true;else if(F&&!F.over)fight(true);};
+$("#bSkip").onclick=()=>{if(playing)skipAll=true;else if(F&&!F.over){skipAll=true;fight();}};
 /* Tree */
 let armed=null;
 function drawTree(){
   $("#ptsBox").innerHTML=`Freie Punkte: <b>${P.pts}</b> · verdient: ${P.earned}`;
   const L=$("#treeList");L.innerHTML="";
-  for(const [grp,nodes] of TREE){L.insertAdjacentHTML("beforeend",`<h3>${grp}</h3>`);
-    for(const [id,n,max,d] of nodes){const r=T(id),b=document.createElement("button");b.className="tn"+(r>=max?" max":"")+(armed===id?" arm":"");
+  for(const [grp,nodes] of TREE){const gc=grp==="Kälte"?" g-ice":grp==="Feuer"?" g-fire":"";L.insertAdjacentHTML("beforeend",`<h3 class="${gc}">${grp}</h3>`);
+    for(const [id,n,max,d] of nodes){const r=T(id),b=document.createElement("button");b.className="tn"+gc+(r>=max?" max":"")+(armed===id?" arm":"");
       b.innerHTML=`<b>${n}</b><span class="pips">${Array.from({length:max},(_,i)=>`<i class="${i<r?"on":""}"></i>`).join("")}</span><p>${d}${armed===id?" <b style='color:#ffd24a;font-size:11px'>– nochmal tippen zum Lernen</b>":""}</p>`;
       b.onclick=()=>{Sound.unlock();if(r>=max||P.pts<1){Sound.click();return;}
         if(armed!==id){armed=id;drawTree();return;}
@@ -579,6 +589,9 @@ function drawTree(){
       L.appendChild(b);}}
 }
 $("#bTree").onclick=()=>{armed=null;drawTree();$("#tree").classList.add("on");};
+let rArm=0;$("#bTreeR").onclick=()=>{Sound.unlock();const b=$("#bTreeR");
+  if(!rArm){rArm=1;b.textContent="WIRKLICH?";setTimeout(()=>{rArm=0;b.textContent="ZURÜCKSETZEN";},2500);return;}
+  rArm=0;b.textContent="ZURÜCKSETZEN";P.pts+=Object.values(P.tree).reduce((a,c)=>a+c,0);P.tree={};armed=null;save();drawTree();};
 $("#bTreeX").onclick=()=>{$("#tree").classList.remove("on");drawPrep();};
 /* Regler */
 function drawSet(){const L=$("#setList");L.innerHTML=`<p class="note">Änderungen gelten ab dem nächsten Kampf und werden gespeichert.</p>`;
@@ -592,7 +605,7 @@ function drawSet(){const L=$("#setList");L.innerHTML=`<p class="note">Änderunge
   mk("TIEFE +1",()=>{P.depth++;});
   mk("SKILL TREE ZURÜCKSETZEN",()=>{P.pts+=Object.values(P.tree).reduce((a,b)=>a+b,0);P.tree={};});
   mk("REGLER: STANDARD",()=>{C={...DEF};});
-  mk("ALLES ZURÜCKSETZEN",()=>{C={...DEF};P={depth:1,pts:0,earned:0,tree:{},chain:["nova","fire","thermo","meteor"]};run.idx=0;});
+  mk("ALLES ZURÜCKSETZEN",()=>{C={...DEF};P={depth:1,pts:0,earned:0,tree:{},chain:["nova","grip","shatter","meteor"]};run.idx=0;});
 }
 $("#bSet").onclick=()=>{drawSet();$("#set").classList.add("on");};
 $("#bSetX").onclick=()=>{$("#set").classList.remove("on");openPrep();};
