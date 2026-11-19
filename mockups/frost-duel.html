@@ -535,7 +535,8 @@ const R = (()=>{
     ag.addColorStop(0,isW?`rgba(56,189,248,${ap})`:`rgba(170,10,10,${ap+.08})`);ag.addColorStop(1,"rgba(0,0,0,0)");
     ctx.fillStyle=ag;ctx.beginPath();ctx.arc(0,-sh*.45,sw*.9,0,7);ctx.fill();
     if(v.dead>0){ctx.rotate((isW?-1:1)*v.dead*1.3);ctx.translate(0,v.dead*sh*.15);}
-    const face = foe? (P(foe.rx+.5,foe.ry+.5).x<c.x?-1:1):1;
+    // PixelLab art is drawn facing left, procedural sprites face right
+    const face = (foe? (P(foe.rx+.5,foe.ry+.5).x<c.x?-1:1):1) * (isW&&baked.queenArt?-1:1);
     ctx.scale(face*(1+v.sq*.12),1-v.sq*.12);
     ctx.imageSmoothingEnabled=false;
     ctx.drawImage(isW?baked.warrior:baked.demon,-sw/2,-sh,sw,sh);
