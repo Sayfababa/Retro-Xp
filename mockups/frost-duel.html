@@ -45,7 +45,24 @@ html,body{height:100dvh;width:100vw;overflow:hidden;background:var(--bg);color:v
 .hpnum{font-family:var(--pix);font-size:11px;font-weight:700;display:flex;justify-content:space-between;color:#a99a80}
 .hpnum span:first-child{color:var(--text)}
 .badge{font-family:var(--pix);font-size:9px;color:var(--frost);background:#0e3550;border:1px solid var(--ice);padding:0 3px;display:none;letter-spacing:.05em}
-.frozen .badge{display:inline-block}
+.frozen .badge,.slowed .badge{display:inline-block}
+.slowed .badge{color:#e6dcff;background:#2a1f4a;border-color:#a98cff}
+#pick{position:fixed;inset:0;z-index:11;display:none;flex-direction:column;align-items:center;gap:8px;
+  padding:calc(env(safe-area-inset-top) + 16px) 12px calc(env(safe-area-inset-bottom) + 14px);background:radial-gradient(ellipse at center,#1a0e0bf2,#000f)}
+#pick.show{display:flex}
+#pick h2{font-size:18px;letter-spacing:.1em;color:#e0c890;text-shadow:0 0 14px #8A0303,0 2px 0 #000;text-align:center}
+#pick.ice h2{color:var(--frost);text-shadow:0 0 14px #38BDF8,0 2px 0 #000}
+.ph{font-size:12px;color:#a99a80}
+#pickGrid{flex:1;min-height:0;width:100%;max-width:420px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;-webkit-overflow-scrolling:touch}
+.pc{display:flex;gap:10px;align-items:center;text-align:left;padding:7px 10px;font-family:var(--serif);color:var(--text);
+  background:linear-gradient(180deg,#221b16,#110d0b);border:2px solid #050403;box-shadow:inset 0 0 0 1px #4a3d2f;border-radius:3px}
+.pc svg{width:32px;height:32px;flex:none}
+.pc b{display:block;font-size:13px;letter-spacing:.05em}
+.pc i{display:block;font-style:normal;font-family:var(--pix);font-size:10px;color:#8f8068}
+.pc span{display:block;font-size:11px;line-height:1.3;margin-top:2px;color:#b0a284}
+.pc.on{box-shadow:inset 0 0 0 1px #38BDF8,0 0 12px #38bdf866;background:linear-gradient(180deg,#14283a,#0b141c)}
+.pc.on b{color:var(--frost)}
+#pickGo{width:100%;max-width:420px;flex:none}
 #p1{text-align:right} #p1 .row{flex-direction:row-reverse}
 .hp.active{box-shadow:inset 0 0 0 1px #c8a050,inset 0 0 0 3px #0b0807,inset 0 0 0 4px #2a221b,0 0 12px #a8844666}
 #mid{padding:6px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:92px}
@@ -107,13 +124,13 @@ html,body{height:100dvh;width:100vw;overflow:hidden;background:var(--bg);color:v
 <div id="app">
   <div id="hud">
     <div class="hp panel" id="p0">
-      <div class="row"><div class="orb"><i></i></div><div class="name">Frost-Krieger</div></div>
+      <div class="row"><div class="orb"><i></i></div><div class="name">Frost-Magierin</div></div>
       <div class="bar"><i></i></div>
       <div class="hpnum"><span class="v">100</span><span class="badge">❄ EIS</span></div>
     </div>
     <div class="panel" id="mid">
       <div id="round">RUNDE 1</div>
-      <div id="turn">Frost-Krieger</div>
+      <div id="turn">Frost-Magierin</div>
       <div id="steps">Schritte: 2/2</div>
     </div>
     <div class="hp panel" id="p1">
@@ -129,11 +146,7 @@ html,body{height:100dvh;width:100vw;overflow:hidden;background:var(--bg);color:v
   </div>
   <div id="stage"><canvas id="cv"></canvas><div id="toast"></div></div>
   <div id="ctrl">
-    <div id="skills">
-      <button class="sk" data-sk="tp"><svg viewBox="0 0 32 32"><g fill="none" stroke="#9fd8ff" stroke-width="2.5"><path d="M16 4a12 12 0 1 1-11 7"/><path d="M16 10a6 6 0 1 1-5 3"/></g><circle cx="16" cy="16" r="2.5" fill="#d9f4ff"/></svg><span class="lbl">Teleport</span><span class="sub">RW 3 · CD 2</span><span class="cd"></span></button>
-      <button class="sk" data-sk="nova"><svg viewBox="0 0 32 32"><g stroke="#38BDF8" stroke-width="2.5" stroke-linecap="square"><path d="M16 2v8M16 22v8M2 16h8M22 16h8M6 6l5 5M21 21l5 5M26 6l-5 5M11 21l-5 5"/></g><circle cx="16" cy="16" r="4" fill="#d9f4ff"/></svg><span class="lbl">Eisnova</span><span class="sub">R 2 · 15 · CD 2</span><span class="cd"></span></button>
-      <button class="sk" data-sk="ice"><svg viewBox="0 0 32 32"><path d="M4 28L22 6l6-2-2 6L4 28z" fill="#38BDF8" stroke="#d9f4ff" stroke-width="1.5"/><path d="M10 22l12-14" stroke="#d9f4ff" stroke-width="1"/></svg><span class="lbl">Eiszapfen</span><span class="sub">RW 4 · 25 · CD 0</span><span class="cd"></span></button>
-    </div>
+    <div id="skills"></div>
     <div id="acts">
       <button class="ab" id="moveBtn">BEWEGEN</button>
       <button class="ab" id="endBtn">ZUG BEENDEN</button>
@@ -141,6 +154,7 @@ html,body{height:100dvh;width:100vw;overflow:hidden;background:var(--bg);color:v
   </div>
 </div>
 <div id="fx"></div><div id="scan"></div><div id="grain"></div><div id="flash"></div>
+<div id="pick"><h2 id="pickT"></h2><div class="rule"></div><p class="ph">Wähle 3 Zauber. Jeder Zauber einmal pro Zug.</p><div id="pickGrid"></div><button class="ab" id="pickGo"></button></div>
 <div id="ov"><h1 id="ovT"></h1><div class="rule"></div><p id="ovP"></p><button class="ab" id="ovB"></button></div>
 <script>
 "use strict";
@@ -148,7 +162,6 @@ html,body{height:100dvh;width:100vw;overflow:hidden;background:var(--bg);color:v
    CONSTANTS & UTIL
    ========================================================= */
 const N = 5;
-const SK = { tp:{range:3,cd:2}, nova:{radius:2,dmg:15,cd:2}, ice:{range:4,dmg:25,cd:0} };
 const DIRS = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
 const cheb = (a,b)=>Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y));
 const inB = (x,y)=>x>=0&&y>=0&&x<N&&y<N;
@@ -196,89 +209,121 @@ const Sound = (()=>{
     victory(){[262,330,392,523].forEach((f,i)=>tone(f,.5,"square",.09,null,i*.18));tone(65,1.4,"triangle",.2,null,.7);},
     defeat(){[220,196,174,131].forEach((f,i)=>tone(f,.6,"sawtooth",.08,f*.97,i*.25));noise(1.2,300,.2,"lowpass",.2);},
     bad(){tone(90,.15,"square",.12,70);},
+    fireShot(){noise(.35,1800,.3,"bandpass",0,400);tone(220,.3,"sawtooth",.1,90);},
+    comet(){tone(900,.45,"sine",.12,200);noise(.45,4000,.15,"highpass",0,600);},
+    explode(){noise(.6,1200,.45,"lowpass",0,80);tone(80,.5,"square",.2,30);},
+    meteorFall(){tone(1200,.65,"sawtooth",.06,100);noise(.65,2500,.15,"bandpass",0,200);},
+    blizzard(){noise(1.1,5000,.22,"highpass",0,1500);tone(600,.9,"sine",.05,300);},
     click(){tone(500,.04,"square",.05);}
   };
   return {unlock,fx,toggle(){muted=!muted;if(master)master.gain.value=muted?0:.5;return muted;}};
 })();
 
 /* =========================================================
+   SKILL DEFINITIONS (data driven)
+   ========================================================= */
+const SKILLS = {
+  tp:      {name:"Teleport",  kind:"tp",   cd:2, range:3, el:"arcane", sub:"Sprung 3",       desc:"Springe auf ein freies Feld in bis zu 3 Feldern Entfernung."},
+  nova:    {name:"Eisnova",   kind:"self", cd:2, radius:2, dmg:15, el:"ice", sub:"R 2 · 15 · Frost",  desc:"Frostexplosion um dich. 15 Schaden, Gegner setzt einen Zug aus."},
+  ice:     {name:"Eiszapfen", kind:"line", cd:0, range:4, dmg:25, el:"ice",  sub:"Linie 4 · 25",       desc:"Gerader Schuss bis 4 Felder. 25 Schaden. Keine Abklingzeit."},
+  fire:    {name:"Feuerball", kind:"line", cd:1, range:4, dmg:20, splash:10, el:"fire", sub:"Linie 4 · 20 · Splash", desc:"Gerader Schuss. 20 Schaden, 10 Splash wenn er neben dem Gegner einschlägt."},
+  comet:   {name:"Eiskomet",  kind:"line", cd:2, range:5, dmg:20, el:"ice",  sub:"Linie 5 · 20 · Stoß",  desc:"Schwerer Komet. 20 Schaden und stößt den Gegner 1 Feld zurück."},
+  meteor:  {name:"Meteor",    kind:"area", cd:3, range:4, dmg:30, splash:15, el:"fire", sub:"Ziel 4 · 30/15",  desc:"Meteor auf ein Feld in 4 Feldern. 30 im Zentrum, 15 daneben."},
+  blizzard:{name:"Blizzard",  kind:"area", cd:2, range:3, dmg:10, el:"ice",  sub:"3×3 · 10 · Lähmt",    desc:"Schneesturm über 3×3 Feldern. 10 Schaden, Gegner hat nur 1 Schritt."}
+};
+const SKILL_IDS = Object.keys(SKILLS);
+const DEFAULT_LOADOUT = [["ice","nova","tp"],["fire","meteor","tp"]];
+
+/* =========================================================
    GAME LOGIC (pure state, no rendering)
    ========================================================= */
 const Logic = {
-  create(mode){
-    return {
-      mode, over:false, winner:-1, active:0, round:1, steps:2, used:{tp:false,nova:false,ice:false},
-      units:[
-        {id:0,name:"Frost-Krieger",x:1,y:4,hp:100,frozen:false,cd:{tp:0,nova:0},fresh:{tp:false,nova:false}},
-        {id:1,name:"Abgrund-Dämon",x:3,y:0,hp:100,frozen:false,cd:{tp:0,nova:0},fresh:{tp:false,nova:false}}
-      ]
-    };
+  create(mode,loadouts){
+    const mk=(id,name,x,y,skills)=>({id,name,x,y,hp:100,frozen:false,slow:false,skills:[...skills],
+      cd:Object.fromEntries(skills.map(k=>[k,0])),fresh:Object.fromEntries(skills.map(k=>[k,false]))});
+    return { mode, over:false, winner:-1, active:0, round:1, steps:2, maxSteps:2, used:{}, _skipping:false,
+      units:[ mk(0,"Frost-Magierin",1,4,loadouts[0]), mk(1,"Abgrund-Dämon",3,0,loadouts[1]) ] };
   },
+  clone(s){ return {...s, used:{...s.used}, units:s.units.map(u=>({...u,skills:u.skills,cd:{...u.cd},fresh:{...u.fresh}}))}; },
   occupied(s,x,y){return s.units.some(u=>u.hp>0&&u.x===x&&u.y===y);},
   me(s){return s.units[s.active];}, foe(s){return s.units[1-s.active];},
+  has(list,x,y){return list.some(p=>p.x===x&&p.y===y);},
   moveTargets(s){
     const u=this.me(s), r=[]; if(s.steps<=0) return r;
     for(const [dx,dy] of DIRS){const x=u.x+dx,y=u.y+dy; if(inB(x,y)&&!this.occupied(s,x,y))r.push({x,y});}
     return r;
   },
-  tpTargets(s){
-    const u=this.me(s), r=[]; if(s.used.tp||u.cd.tp>0) return r;
-    for(let x=0;x<N;x++)for(let y=0;y<N;y++){const d=cheb(u,{x,y}); if(d>=1&&d<=SK.tp.range&&!this.occupied(s,x,y))r.push({x,y});}
+  ready(s,id){ const u=this.me(s); return u.skills.includes(id)&&!s.used[id]&&!(u.cd[id]>0); },
+  lineTiles(u,range){ const r=[]; for(const [dx,dy] of DIRS)for(let k=1;k<=range;k++){const x=u.x+dx*k,y=u.y+dy*k; if(!inB(x,y))break; r.push({x,y});} return r; },
+  area(c,rad){ const r=[]; for(let x=c.x-rad;x<=c.x+rad;x++)for(let y=c.y-rad;y<=c.y+rad;y++) if(inB(x,y)) r.push({x,y}); return r; },
+  // valid target tiles for a skill (empty if not usable)
+  targets(s,id){
+    if(!this.ready(s,id)) return [];
+    const u=this.me(s), d=SKILLS[id], r=[];
+    if(d.kind==="tp"){ for(let x=0;x<N;x++)for(let y=0;y<N;y++){const c=cheb(u,{x,y}); if(c>=1&&c<=d.range&&!this.occupied(s,x,y))r.push({x,y});} return r; }
+    if(d.kind==="self") return cheb(u,this.foe(s))<=d.radius?[{x:u.x,y:u.y}]:[];
+    if(d.kind==="line") return this.lineTiles(u,d.range);
+    if(d.kind==="area"){ for(let x=0;x<N;x++)for(let y=0;y<N;y++){const c=cheb(u,{x,y}); if(c>=1&&c<=d.range)r.push({x,y});} return r; }
     return r;
   },
-  novaArea(s){
-    const u=this.me(s), r=[];
-    for(let x=0;x<N;x++)for(let y=0;y<N;y++){const d=cheb(u,{x,y}); if(d>=1&&d<=SK.nova.radius)r.push({x,y});}
-    return r;
-  },
-  novaHits(s){return cheb(this.me(s),this.foe(s))<=SK.nova.radius;},
-  iceTargets(s){
-    const u=this.me(s), r=[]; if(s.used.ice) return r;
-    for(const [dx,dy] of DIRS)for(let k=1;k<=SK.ice.range;k++){const x=u.x+dx*k,y=u.y+dy*k; if(!inB(x,y))break; r.push({x,y});}
-    return r;
-  },
-  // first enemy on straight path to target (inclusive) -> hit
-  iceTrace(s,tx,ty){
-    const u=this.me(s), f=this.foe(s);
-    const dx=Math.sign(tx-u.x), dy=Math.sign(ty-u.y), len=cheb(u,{x:tx,y:ty});
-    for(let k=1;k<=len;k++){const x=u.x+dx*k,y=u.y+dy*k; if(f.x===x&&f.y===y) return {hit:true,x,y};}
-    return {hit:false,x:tx,y:ty};
-  },
-  has(list,x,y){return list.some(p=>p.x===x&&p.y===y);},
   damage(s,u,d){u.hp=Math.max(0,u.hp-d); if(u.hp===0){s.over=true; s.winner=1-u.id;}},
-  // ---- actions: return result or null if illegal (no resource consumed) ----
   move(s,x,y){ if(s.over||!this.has(this.moveTargets(s),x,y))return null;
     const u=this.me(s), from={x:u.x,y:u.y}; u.x=x;u.y=y; s.steps--; return {from}; },
-  teleport(s,x,y){ if(s.over||!this.has(this.tpTargets(s),x,y))return null;
-    const u=this.me(s), from={x:u.x,y:u.y}; u.x=x;u.y=y; s.used.tp=true; u.cd.tp=SK.tp.cd; u.fresh.tp=true; return {from}; },
-  nova(s){ const u=this.me(s); if(s.over||s.used.nova||u.cd.nova>0||!this.novaHits(s))return null;
-    const f=this.foe(s); s.used.nova=true; u.cd.nova=SK.nova.cd; u.fresh.nova=true;
-    this.damage(s,f,SK.nova.dmg); if(f.hp>0)f.frozen=true; return {hit:true}; },
-  ice(s,x,y){ if(s.over||!this.has(this.iceTargets(s),x,y))return null;
-    const tr=this.iceTrace(s,x,y); s.used.ice=true; if(tr.hit)this.damage(s,this.foe(s),SK.ice.dmg); return tr; },
-  // central cooldown tick: at end of the owner's turn, skip skills used this turn
-  tickCooldowns(u){ for(const k of ["tp","nova"]){ if(u.fresh[k]) u.fresh[k]=false; else if(u.cd[k]>0) u.cd[k]--; } },
+  // single entry point for every skill: validates, mutates state, returns event description
+  use(s,id,x,y){
+    if(s.over) return null;
+    const d=SKILLS[id], u=this.me(s), f=this.foe(s);
+    if(d.kind==="self"){ x=u.x; y=u.y; }
+    if(!this.has(this.targets(s,id),x,y)) return null;
+    const res={id,from:{x:u.x,y:u.y},x,y,dmg:0,hit:false,froze:false,slowed:false,push:null,tiles:[]};
+    s.used[id]=true; u.cd[id]=d.cd; u.fresh[id]=d.cd>0;
+    if(d.kind==="tp"){ u.x=x; u.y=y; return res; }
+    if(d.kind==="self"){ res.tiles=this.area(u,d.radius).filter(p=>!(p.x===u.x&&p.y===u.y)); res.hit=true; res.dmg=d.dmg; }
+    if(d.kind==="line"){
+      const dx=Math.sign(x-u.x), dy=Math.sign(y-u.y), len=cheb(u,{x,y});
+      res.x=x; res.y=y;
+      for(let k=1;k<=len;k++){const px=u.x+dx*k,py=u.y+dy*k; if(f.x===px&&f.y===py){res.hit=true;res.x=px;res.y=py;break;}}
+      if(res.hit){ res.dmg=d.dmg;
+        if(id==="comet"){const nx=f.x+dx,ny=f.y+dy; if(inB(nx,ny)&&!this.occupied(s,nx,ny)) res.push={from:{x:f.x,y:f.y},to:{x:nx,y:ny}};}
+      } else if(d.splash&&cheb(f,{x:res.x,y:res.y})===1) res.dmg=d.splash;
+      res.tiles=[{x:res.x,y:res.y}];
+    }
+    if(d.kind==="area"){
+      res.tiles=this.area({x,y},1); const c=cheb(f,{x,y});
+      if(id==="meteor"){ res.dmg=c===0?d.dmg:c===1?d.splash:0; }
+      if(id==="blizzard"&&c<=1){ res.dmg=d.dmg; }
+      res.hit=res.dmg>0;
+    }
+    if(res.dmg>0) this.damage(s,f,res.dmg);
+    if(f.hp>0&&res.hit){
+      if(id==="nova"){ f.frozen=true; res.froze=true; }
+      if(id==="blizzard"){ f.slow=true; res.slowed=true; }
+      if(res.push){ f.x=res.push.to.x; f.y=res.push.to.y; }
+    }
+    return res;
+  },
+  // central cooldown tick at the end of the owner's turn; skills used this turn don't tick
+  tickCooldowns(u){ for(const k of u.skills){ if(u.fresh[k]) u.fresh[k]=false; else if(u.cd[k]>0) u.cd[k]--; } },
   endTurn(s){
     if(s.over) return;
-    const u=this.me(s); this.tickCooldowns(u);
-    if(u.frozen && s._skipping){ u.frozen=false; }
+    this.tickCooldowns(this.me(s));
     s._skipping=false;
     s.active=1-s.active; if(s.active===0) s.round++;
-    s.steps=2; s.used={tp:false,nova:false,ice:false};
-    if(this.me(s).frozen){ s._skipping=true; s.steps=0; s.used={tp:true,nova:true,ice:true}; }
+    s.used={}; s.steps=2; s.maxSteps=2;
+    const u=this.me(s);
+    if(u.frozen){ s._skipping=true; s.steps=0; for(const k of u.skills) s.used[k]=true; }
+    else if(u.slow){ u.slow=false; s.steps=1; s.maxSteps=1; }
   },
-  skillReady(s,k){ const u=this.me(s); if(s.used[k]) return false; if(k==="ice") return true; if(u.cd[k]>0) return false;
-    if(k==="nova") return this.novaHits(s)||this.skillReady(s,"tp"); return this.tpTargets(s).length>0; },
-  // turn is over when no step and no usable skill remains
-  turnExhausted(s){ return s.steps===0 && !["tp","nova","ice"].some(k=>this.skillReady(s,k)); }
+  skillUseful(s,id){ const t=this.targets(s,id); if(!t.length) return false;
+    if(SKILLS[id].kind==="self") return true; return true; },
+  turnExhausted(s){ return s.steps===0 && !this.me(s).skills.some(k=>this.skillUseful(s,k)); }
 };
 
 /* =========================================================
    AI (scoring based planner, same rules as player)
    ========================================================= */
 const AI = {
-  clone(s){return JSON.parse(JSON.stringify(s));},
-  reach(s,max){ // BFS positions within max single steps; returns {x,y,path}
+  reach(s,max){
     const u=Logic.me(s), f=Logic.foe(s), res=[{x:u.x,y:u.y,path:[]}], seen=new Set([u.x+","+u.y]);
     let frontier=[res[0]];
     for(let d=0; d<max; d++){ const nf=[];
@@ -288,56 +333,62 @@ const AI = {
     return res;
   },
   aligned(a,b,r){const dx=Math.abs(a.x-b.x),dy=Math.abs(a.y-b.y);const d=Math.max(dx,dy);return d>=1&&d<=r&&(dx===0||dy===0||dx===dy);},
-  threat(me,foe,foeCd,froze){
-    if(froze) return 0;
-    // minimal steps foe needs to get a shot / nova at "me"
-    let iceSteps=9,novaSteps=9;
-    for(let x=0;x<N;x++)for(let y=0;y<N;y++){ if(x===me.x&&y===me.y)continue; const p={x,y}; const d=cheb(foe,p);
-      if(this.aligned(p,me,4)) iceSteps=Math.min(iceSteps,d);
-      if(cheb(p,me)<=2) novaSteps=Math.min(novaSteps,d); }
-    let t=0;
-    const tpOK=foeCd.tp===0;
-    const iceS = tpOK? Math.min(iceSteps, iceSteps<=5?1:9) : iceSteps;
-    if(iceS<=2) t=Math.max(t,25-iceS*3); else t=Math.max(t,6);
-    if(foeCd.nova===0){ const ns= tpOK?Math.min(novaSteps, novaSteps<=5?1:9):novaSteps; if(ns<=2) t=Math.max(t,(15+18)-ns*3); }
-    return t;
+  // can a caster standing on p hit "me" with skill id (approx. incl. splash)
+  reaches(id,p,me){ const d=SKILLS[id], c=cheb(p,me);
+    if(d.kind==="line") return this.aligned(p,me,d.range)?d.dmg:0;
+    if(d.kind==="self") return c<=d.radius?d.dmg+18:0;
+    if(id==="meteor") return c>=1&&c<=d.range?d.dmg:c===d.range+1?d.splash:0;
+    if(id==="blizzard") return c<=d.range+1?d.dmg+5:0;
+    return 0; },
+  threat(me,foe,froze){
+    if(froze||foe.frozen) return 0;
+    const tp=foe.skills.includes("tp")&&!(foe.cd.tp>1); const mob=(foe.slow?1:2);
+    let total=0;
+    for(const id of foe.skills){ if(id==="tp"||foe.cd[id]>1) continue;
+      let bestNeed=9, val=0;
+      for(let x=0;x<N;x++)for(let y=0;y<N;y++){ if(x===me.x&&y===me.y)continue; const v=this.reaches(id,{x,y},me); if(!v)continue;
+        const need=cheb(foe,{x,y}); if(need<bestNeed||(need===bestNeed&&v>val)){bestNeed=need;val=v;} }
+      const eff=tp?Math.min(bestNeed,bestNeed<=SKILLS.tp.range+mob?1:9):bestNeed;
+      if(eff<=mob) total+=val*(1-eff*.12);
+    }
+    return total;
   },
-  evaluate(s0,me,dmg,froze,usedTp){
-    const foe=Logic.foe(s0); const foeHp=foe.hp-dmg;
-    if(foeHp<=0) return 100000;
-    let sc=dmg*4+(froze?22:0);
-    const myHp=me.hp;
-    sc -= this.threat({x:me.x,y:me.y},{x:foe.x,y:foe.y},foe.cd,froze)*(myHp<=40?1.6:1);
-    // own follow-up potential next turn
-    const d=cheb(me,foe); if(d>=2&&d<=3) sc+=3; if(d===1&&!froze) sc-=2;
+  // greedily apply every damaging skill that is worth it (mutates s)
+  greedy(s){
+    const out=[];
+    for(;;){ let best=null;
+      for(const id of Logic.me(s).skills){ if(id==="tp") continue;
+        for(const t of Logic.targets(s,id)){ const c=Logic.clone(s); const r=Logic.use(c,id,t.x,t.y); if(!r||!r.hit&&!r.dmg) continue;
+          const v=r.dmg*4+(r.froze?22:0)+(r.slowed?8:0)+(r.push?1:0)+(c.over?1e5:0)-(SKILLS[id].cd*0.5);
+          if(!best||v>best.v) best={v,id,x:t.x,y:t.y}; } }
+      if(!best) break; Logic.use(s,best.id,best.x,best.y); out.push({id:best.id,x:best.x,y:best.y}); if(s.over) break; }
+    return out;
+  },
+  evaluate(s0,s,me,usedTp){
+    const foe=Logic.foe(s), foe0=Logic.foe(s0);
+    if(foe.hp<=0) return 100000;
+    let sc=(foe0.hp-foe.hp)*4+(foe.frozen&&!foe0.frozen?22:0)+(foe.slow&&!foe0.slow?8:0);
+    sc -= this.threat(me,foe,foe.frozen)*(Logic.me(s).hp<=40?1.6:1)*0.8;
+    const d=cheb(me,foe); if(d>=2&&d<=3) sc+=3; if(d===1&&!foe.frozen) sc-=2;
     if(usedTp) sc-=3;
     if((me.x===0||me.x===N-1)&&(me.y===0||me.y===N-1)) sc-=2;
     return sc;
   },
-  // attacks that hit from position u (each skill at most once per turn)
-  attacks(s,u,used){ const f=Logic.foe(s), r=[];
-    if(!used.ice&&this.aligned(u,f,4)) r.push({type:"ice",x:f.x,y:f.y});
-    if(!used.nova&&u.cd.nova===0&&cheb(u,f)<=SK.nova.radius) r.push({type:"nova"});
-    return r; },
   plan(s){
-    const best={score:-1e9,plan:null};
-    const consider=(score,plan)=>{if(score>best.score){best.score=score;best.plan=plan;}};
-    const dmgOf=list=>list.reduce((d,k)=>d+(k.type==="ice"?SK.ice.dmg:k.type==="nova"?SK.nova.dmg:0),0);
+    let best={score:-1e9,plan:null};
     for(const pre of this.reach(s,s.steps)){
-      const s1=this.clone(s); const u1=Logic.me(s1); u1.x=pre.x;u1.y=pre.y; s1.steps-=pre.path.length;
-      const used={...s1.used};
-      const atkA=this.attacks(s1,u1,used); atkA.forEach(k=>used[k.type]=true);
-      const tps=[null]; if(!used.tp&&u1.cd.tp===0) for(const t of Logic.tpTargets(s1)) tps.push(t);
+      const s1=Logic.clone(s); const u1=Logic.me(s1); u1.x=pre.x;u1.y=pre.y; s1.steps-=pre.path.length;
+      const atkA=this.greedy(s1);
+      const tps=[null]; if(!s1.over) for(const t of Logic.targets(s1,"tp")) tps.push(t);
       for(const t of tps){
-        const s2=this.clone(s1); const u2=Logic.me(s2); if(t){u2.x=t.x;u2.y=t.y;}
-        const atkB=t?this.attacks(s2,u2,used):[];
-        const skills=[...atkA,...(t?[{type:"tp",x:t.x,y:t.y}]:[]),...atkB];
-        const dmg=dmgOf(skills), froze=skills.some(k=>k.type==="nova");
-        for(const post of this.reach(s2,s2.steps)){
-          const fin={x:post.x,y:post.y,hp:u2.hp};
-          let sc=this.evaluate(s2,fin,dmg,froze&&Logic.foe(s2).hp-dmg>0,!!t&&atkB.length===0);
+        const s2=Logic.clone(s1); if(t) Logic.use(s2,"tp",t.x,t.y);
+        const atkB=t&&!s2.over?this.greedy(s2):[];
+        const skills=[...atkA,...(t?[{id:"tp",x:t.x,y:t.y}]:[]),...atkB];
+        const posts=s2.over?[{x:Logic.me(s2).x,y:Logic.me(s2).y,path:[]}]:this.reach(s2,s2.steps);
+        for(const post of posts){
+          let sc=this.evaluate(s,s2,{x:post.x,y:post.y},!!t&&atkB.length===0);
           sc-=(pre.path.length+post.path.length)*0.15;
-          consider(sc,{pre:pre.path,skills,post:post.path});
+          if(sc>best.score) best={score:sc,plan:{pre:pre.path,skills,post:post.path}};
         }
       }
     }
@@ -354,11 +405,11 @@ const R = (()=>{
   const particles=[], rings=[], bolts=[], tileFx=new Map(); let shake=0, waves=[];
   // ---- sprites ----
   const SPR={
-    warrior:{pal:{k:"#07080c",a:"#2c323d",b:"#58606e",l:"#8b95a6",e:"#7fe0ff",c:"#16233a",g:"#3d4656",s:"#1b1f27"},rows:[
-      "......kkkk......",".....kllbbk.....","....kbllbbbk....","....kbbbbbbk....","....keeksseek...","....kbkkkkbbk...",
-      ".....ksbbsk.....","..kkkbbllbbkkk..",".kcbbllbbllbbck.",".kcbalbbbblabck.",".kcbabkllkbabck.",".kcgk.kbbk.kgck.",
-      ".kcgk.kaak.kgck.","..kk.kbbbbk.kk..",".....kbaabk.....","....kbak.kabk...","....kak...kak...","....kak...kak...",
-      "...kbbk...kbbk..","...kkkk...kkkk.."]},
+    warrior:{pal:{k:"#07080c",h:"#1c2a4a",H:"#2f4a7a",l:"#c8d8e8",s:"#d8b8a0",e:"#7fe0ff",r:"#1a2546",R:"#3d5a90",w:"#d9f4ff",g:"#a88446"},rows:[
+      "......kkk.......",".....khHHk......","....khHHHHk.....","...khHllllhk....","...khlsssslk....","...khlsesesk....",
+      "...khlssssk.....","...khkkwwkhk....","..kkhRwggwRkk...","..ksRRrwwrRRsk..","..ksRrrggrrRsk..","...kkRrrrrRkk...",
+      "....kRrrrrrk....","....kRrwwrRk....","...kRrrwwrrRk...","...kRrrwwrrRk...","..kRRrrwwrrRRk..","..kRrrrwwrrrRk..",
+      "..kwwwwwwwwwwk..","..kkkkkkkkkkkk.."]},
     demon:{pal:{k:"#060202",d:"#2a0b0b",r:"#5a0d0d",m:"#8a1414",h:"#9a8a72",H:"#cfc0a0",e:"#ff3a1a",c:"#d8cdb8",t:"#e8e0d0"},rows:[
       ".H............H.",".Hh..........hH.","..hh........hh..","...hh.kkkk.hh...","....hkddddkh....","....kdeddedk....",
       "....kddmmddk....","....kdtdtddk....","..kkkkddddkkkk..",".kddrddmmddrddk.","kddrrdmrrmdrrddk","kdk.kdrmmrdk.kdk",
@@ -455,17 +506,18 @@ const R = (()=>{
     ctx.imageSmoothingEnabled=false;
     ctx.drawImage(isW?baked.warrior:baked.demon,-sw/2,-sh,sw,sh);
     // weapon
-    if(isW){ ctx.save(); ctx.translate(sw*.36,-sh*.45); ctx.rotate(-.7+v.swing*1.6);
-      ctx.fillStyle="#3a2a1a";ctx.fillRect(-px,-px*.5,px*2,px*3);
-      const bg=ctx.createLinearGradient(0,0,0,-sh*.7);bg.addColorStop(0,"#9fe4ff");bg.addColorStop(1,"#ffffff");
-      ctx.shadowColor="#38BDF8";ctx.shadowBlur=8+4*Math.sin(time/200);ctx.fillStyle=bg;
-      ctx.beginPath();ctx.moveTo(-px*.9,0);ctx.lineTo(px*.9,0);ctx.lineTo(px*.3,-sh*.62);ctx.lineTo(0,-sh*.72);ctx.lineTo(-px*.3,-sh*.62);ctx.fill();
-      ctx.fillStyle="#6b5226";ctx.shadowBlur=0;ctx.fillRect(-px*2.2,-px*.2,px*4.4,px);ctx.restore();
+    if(isW){ ctx.save(); ctx.translate(sw*.42,-sh*.42); ctx.rotate(.12+v.swing*.9);
+      ctx.fillStyle="#3a2414";ctx.fillRect(-px*.6,-sh*.5,px*1.2,sh*.95);
+      ctx.fillStyle="#6b5226";ctx.fillRect(-px*1.2,-sh*.5,px*2.4,px);
+      const og=ctx.createRadialGradient(0,-sh*.58,1,0,-sh*.58,px*3.2);og.addColorStop(0,"#ffffff");og.addColorStop(.4,"#7fe0ff");og.addColorStop(1,"rgba(56,189,248,0)");
+      ctx.shadowColor="#38BDF8";ctx.shadowBlur=10+5*Math.sin(time/200);ctx.fillStyle=og;ctx.beginPath();ctx.arc(0,-sh*.58,px*3.2,0,7);ctx.fill();
+      ctx.fillStyle="#d9f4ff";ctx.beginPath();ctx.moveTo(0,-sh*.58-px*1.8);ctx.lineTo(px*1.1,-sh*.58);ctx.lineTo(0,-sh*.58+px*1.8);ctx.lineTo(-px*1.1,-sh*.58);ctx.fill();
+      ctx.shadowBlur=0;ctx.restore();
     } else { // glowing eyes / embers
       ctx.fillStyle=`rgba(255,60,20,${.5+.5*Math.sin(time/150)})`;ctx.shadowColor="#ff2a00";ctx.shadowBlur=8;ctx.fillRect(-sw/2+6*px,-sh+5*px,px,px);ctx.fillRect(-sw/2+9*px,-sh+5*px,px,px);ctx.shadowBlur=0;
       if(v.swing>0){ctx.strokeStyle=`rgba(255,80,40,${v.swing})`;ctx.lineWidth=2;for(let k=0;k<3;k++){ctx.beginPath();ctx.arc(sw*.4,-sh*.4,sw*.3+k*3,-1.2,.4);ctx.stroke();}}
     }
-    if(isW){ctx.fillStyle=`rgba(127,224,255,${.6+.4*Math.sin(time/170)})`;ctx.shadowColor="#38BDF8";ctx.shadowBlur=8;ctx.fillRect(-sw/2+5*px,-sh+4*px,px*2,px);ctx.fillRect(-sw/2+9*px,-sh+4*px,px*2,px);ctx.shadowBlur=0;}
+    if(isW){ctx.fillStyle=`rgba(127,224,255,${.6+.4*Math.sin(time/170)})`;ctx.shadowColor="#38BDF8";ctx.shadowBlur=8;ctx.fillRect(-sw/2+7*px,-sh+5*px,px,px);ctx.fillRect(-sw/2+9*px,-sh+5*px,px,px);ctx.shadowBlur=0;}
     if(v.flash>0){ctx.globalAlpha=v.flash*v.alpha;ctx.drawImage(isW?baked.warriorW:baked.demonW,-sw/2,-sh,sw,sh);}
     ctx.restore();
     // ice block
@@ -503,11 +555,19 @@ const R = (()=>{
     for(const o of us) drawUnit(o.u,o.v,time,o.active,o.foeV);
     // bolts (icicles)
     for(let k=bolts.length-1;k>=0;k--){const bl=bolts[k];const p=clamp((time-bl.t0)/bl.dur,0,1);
-      const a=P(bl.a.x+.5,bl.a.y+.5),b=P(bl.b.x+.5,bl.b.y+.5); const x=a.x+(b.x-a.x)*p, y=a.y+(b.y-a.y)*p-TW*.45;
-      const ang=Math.atan2(b.y-a.y,b.x-a.x); ctx.save();ctx.translate(x,y);ctx.rotate(ang);ctx.shadowColor="#38BDF8";ctx.shadowBlur=12;
-      ctx.fillStyle="#d9f4ff";ctx.beginPath();ctx.moveTo(TW*.25,0);ctx.lineTo(-TW*.12,-TW*.06);ctx.lineTo(-TW*.2,0);ctx.lineTo(-TW*.12,TW*.06);ctx.fill();
-      ctx.fillStyle="#38BDF8";ctx.fillRect(-TW*.2,-1,TW*.3,2);ctx.restore();
-      if(Math.random()<.7)particles.push({x,y,vx:(Math.random()-.5)*.5,vy:(Math.random()-.5)*.5,life:1,decay:.05,c:"#bfeaff",s:2});
+      const b=P(bl.b.x+.5,bl.b.y+.5); const sky=bl.kind==="meteor"; const a=sky?{x:b.x-TW*1.6,y:b.y-TW*4.5}:P(bl.a.x+.5,bl.a.y+.5);
+      const lift=sky?0:TW*.45; const x=a.x+(b.x-a.x)*p, y=a.y+(b.y-a.y)*p-lift;
+      const ang=Math.atan2(b.y-a.y,b.x-a.x); ctx.save();ctx.translate(x,y);ctx.rotate(ang);
+      if(bl.kind==="ice"){ ctx.shadowColor="#38BDF8";ctx.shadowBlur=12;
+        ctx.fillStyle="#d9f4ff";ctx.beginPath();ctx.moveTo(TW*.25,0);ctx.lineTo(-TW*.12,-TW*.06);ctx.lineTo(-TW*.2,0);ctx.lineTo(-TW*.12,TW*.06);ctx.fill();
+        ctx.fillStyle="#38BDF8";ctx.fillRect(-TW*.2,-1,TW*.3,2); }
+      else { const fire=bl.kind!=="comet"; const rad=TW*(sky?.17:bl.kind==="comet"?.12:.085);
+        const g=ctx.createRadialGradient(0,0,1,0,0,rad*2);g.addColorStop(0,fire?"rgba(255,230,140,1)":"rgba(255,255,255,1)");g.addColorStop(.45,fire?"rgba(255,110,20,.9)":"rgba(56,189,248,.9)");g.addColorStop(1,"rgba(0,0,0,0)");
+        ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,0,rad*2,0,7);ctx.fill();
+        if(sky){ctx.fillStyle="#3a2418";ctx.beginPath();ctx.arc(0,0,rad*.8,0,7);ctx.fill();ctx.fillStyle="#ff9a40";ctx.fillRect(-rad*.3,-rad*.3,rad*.3,rad*.3);} }
+      ctx.restore();
+      const tc=bl.kind==="ice"?["#bfeaff"]:bl.kind==="comet"?["#d9f4ff","#38BDF8"]:["#ffb060","#ff5a1a","#8A0303","#333"];
+      for(let q=0;q<(bl.kind==="ice"?1:3);q++) particles.push({x:x+(Math.random()-.5)*6,y:y+(Math.random()-.5)*6,vx:(Math.random()-.5)*.6,vy:(Math.random()-.5)*.6-(bl.kind==="ice"?0:.3),life:1,decay:.04,c:tc[(Math.random()*tc.length)|0],s:2+Math.random()*2});
       if(p>=1)bolts.splice(k,1);}
     // particles
     for(let k=particles.length-1;k>=0;k--){const q=particles[k];q.x+=q.vx;q.y+=q.vy;q.vy+=q.g||0;q.life-=q.decay;if(q.life<=0){particles.splice(k,1);continue;}
@@ -528,7 +588,9 @@ const R = (()=>{
       particles.push({x:c.x,y:c.y-TW*lift,vx:Math.cos(a)*s,vy:Math.sin(a)*s*.6-1,life:1,decay:.015+Math.random()*.02,c:cols[k%cols.length],s:2+Math.random()*2,g});}},
     ring(x,y,c){rings.push({x,y,c,t0:performance.now(),dur:500});},
     wave(x,y){waves.push({x,y,t0:performance.now(),dur:650});},
-    bolt(a,b,dur){bolts.push({a,b,t0:performance.now(),dur});},
+    bolt(a,b,dur,kind="ice"){bolts.push({a,b,t0:performance.now(),dur,kind});},
+    snow(tiles,dur){const n=Math.round(dur/12);for(let k=0;k<n;k++){const t=tiles[k%tiles.length];const c=P(t.x+Math.random(),t.y+Math.random());
+      particles.push({x:c.x+TW*.6,y:c.y-TW*(1+Math.random()*1.2),vx:-1.2-Math.random(),vy:1.6+Math.random(),life:1,decay:.02+Math.random()*.02,c:Math.random()<.7?"#ffffff":"#7fe0ff",s:2+Math.random()*2});}},
     tile(x,y,type,dur=600){tileFx.set(x+","+y,{type,t0:performance.now(),dur});},
     shake(v){shake=Math.max(shake,v);},
     celebrate(col){for(let k=0;k<120;k++)particles.push({x:Math.random()*W,y:-10-Math.random()*H*.5,vx:(Math.random()-.5),vy:1+Math.random()*2,life:1,decay:.004,c:col[k%col.length],s:2+Math.random()*3});}
@@ -543,7 +605,7 @@ const Anim = {
   reset(s){this.tweens=[];this.v=s.units.map(u=>({rx:u.x,ry:u.y,ox:0,oy:0,hop:0,alpha:1,flash:0,sq:0,swing:0,dead:0}));},
   tween(ms,fn){return new Promise(res=>this.tweens.push({t0:performance.now(),ms,fn,res}));},
   update(t){for(let k=this.tweens.length-1;k>=0;k--){const w=this.tweens[k];const p=clamp((t-w.t0)/w.ms,0,1);w.fn(p);if(p>=1){this.tweens.splice(k,1);w.res();}}},
-  async move(id,from,to){const v=this.v[id];Sound.fx.step();
+  async move(id,from,to,push){const v=this.v[id];Sound.fx.step();
     await this.tween(240,p=>{const e=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;v.rx=from.x+(to.x-from.x)*e;v.ry=from.y+(to.y-from.y)*e;v.hop=Math.sin(p*Math.PI);});
     v.hop=0; R.burst(to.x,to.y,6,["#3a3029","#5a4a3a"],1.2,0);},
   async teleport(id,from,to){const v=this.v[id];const col=id===0?["#38BDF8","#D9F4FF","#1b2a3a"]:["#8A0303","#ff4a2a","#1a0808"];
@@ -564,46 +626,109 @@ const Anim = {
 const Effects={flash(a){const f=$("#flash");f.style.transition="none";f.style.opacity=a;requestAnimationFrame(()=>{f.style.transition="opacity .35s";f.style.opacity=0;});}};
 
 /* =========================================================
+   SKILL EFFECTS (visual playback of a Logic.use result)
+   ========================================================= */
+const ICONS={
+  tp:'<g fill="none" stroke="#b9a0ff" stroke-width="2.5"><path d="M16 4a12 12 0 1 1-11 7"/><path d="M16 10a6 6 0 1 1-5 3"/></g><circle cx="16" cy="16" r="2.5" fill="#e6dcff"/>',
+  nova:'<g stroke="#38BDF8" stroke-width="2.5" stroke-linecap="square"><path d="M16 2v8M16 22v8M2 16h8M22 16h8M6 6l5 5M21 21l5 5M26 6l-5 5M11 21l-5 5"/></g><circle cx="16" cy="16" r="4" fill="#d9f4ff"/>',
+  ice:'<path d="M4 28L22 6l6-2-2 6L4 28z" fill="#38BDF8" stroke="#d9f4ff" stroke-width="1.5"/><path d="M10 22l12-14" stroke="#d9f4ff" stroke-width="1"/>',
+  fire:'<path d="M5 27c6-2 9-7 11-13" stroke="#8A0303" stroke-width="3" fill="none"/><circle cx="20" cy="12" r="7" fill="#ff7a1a"/><circle cx="20" cy="12" r="3.5" fill="#ffe08a"/>',
+  comet:'<path d="M3 29L17 15" stroke="#7fe0ff" stroke-width="4" opacity=".5"/><path d="M6 28L18 16" stroke="#d9f4ff" stroke-width="2"/><circle cx="21" cy="11" r="7" fill="#38BDF8" stroke="#d9f4ff" stroke-width="2"/>',
+  meteor:'<path d="M2 4l14 14M8 2l12 12M2 10l11 11" stroke="#ff5a1a" stroke-width="2" opacity=".7"/><circle cx="21" cy="21" r="8" fill="#4a2a1a" stroke="#ff7a1a" stroke-width="2"/><circle cx="19" cy="19" r="2" fill="#ffb060"/>',
+  blizzard:'<g stroke="#d9f4ff" stroke-width="2"><path d="M8 6v8M4 10h8M24 4v8M20 8h8M16 18v10M11 23h10M12 19l8 8M20 19l-8 8"/></g><path d="M2 16q7-5 14 0t14 0" stroke="#38BDF8" fill="none" stroke-width="2"/>'
+};
+const ELCOL={ice:["#d9f4ff","#38BDF8","#ffffff","#7fe0ff"],fire:["#ffe08a","#ff7a1a","#ff3a0a","#8A0303"],arcane:["#e6dcff","#a98cff","#3a2a6a"]};
+const SkillFX = {
+  async play(id,uid,r,s){
+    const foeId=1-uid, d=SKILLS[id], col=ELCOL[d.el];
+    if(d.kind==="tp") return Anim.teleport(uid,r.from,{x:r.x,y:r.y});
+    if(d.kind==="self"){ await Anim.cast(uid); Sound.fx.nova(); R.wave(r.from.x,r.from.y); $("#flash").style.background="#bfeaff"; Effects.flash(.45); R.shake(6);
+      R.burst(r.from.x,r.from.y,60,col,4.5,.3); r.tiles.forEach(p=>R.tile(p.x,p.y,"frost",700)); await sleep(180); }
+    if(d.kind==="line"){
+      const dx=Math.sign(r.x-r.from.x)-Math.sign(r.y-r.from.y), dy=Math.sign(r.x-r.from.x)+Math.sign(r.y-r.from.y);
+      Anim.attack(uid,{x:clamp(dx,-1,1),y:clamp(dy,-1,1)});
+      id==="fire"?Sound.fx.fireShot():id==="comet"?Sound.fx.comet():Sound.fx.iceShot();
+      const dur=(id==="comet"?120:90)*cheb(r.from,r)+80; R.bolt(r.from,{x:r.x,y:r.y},dur,id); await sleep(dur);
+      R.burst(r.x,r.y,id==="ice"?26:40,col,id==="ice"?3.5:4.5,.45);
+      if(d.el==="fire"){ Sound.fx.explode(); R.tile(r.x,r.y,"hit",500); }
+      else if(r.hit) Sound.fx.iceHit();
+      if(!r.dmg){ Game.toast("Verfehlt!","info"); }
+    }
+    if(d.kind==="area"){
+      if(id==="meteor"){ Sound.fx.meteorFall(); R.bolt({x:r.x,y:r.y},{x:r.x,y:r.y},650,"meteor"); await sleep(650);
+        Sound.fx.explode(); R.shake(14); $("#flash").style.background="#ff7030"; Effects.flash(.4);
+        R.burst(r.x,r.y,70,col,5,.2,.06); r.tiles.forEach(p=>{R.tile(p.x,p.y,"hit",800); R.burst(p.x,p.y,6,["#3a2a1a","#ff7a1a"],2,0);}); }
+      else { Sound.fx.blizzard(); R.snow(r.tiles,900); for(const p of r.tiles) R.tile(p.x,p.y,"frost",1100); await sleep(700); }
+      if(!r.dmg) Game.toast("Verfehlt!","info");
+    }
+    if(r.dmg>0){
+      await Anim.hit(foeId); Game.refresh();
+      if(Game.s.units[foeId].hp===0) return Anim.die(foeId);
+      if(r.push) await Anim.move(foeId,r.push.from,r.push.to,true);
+      if(r.froze) await Anim.freeze(foeId,Game.s.units[foeId].x,Game.s.units[foeId].y);
+      if(r.slowed) Game.toast(Game.s.units[foeId].name+" ist gelähmt (1 Schritt).","info");
+    }
+  }
+};
+
+/* =========================================================
    CONTROLLER (input, UI, turn flow)
    ========================================================= */
 const Game = {
-  s:null, ui:{mode:null}, busy:false, mode:"ai", turnToken:0,
-  start(){
-    this.s=Logic.create(this.mode); this.ui.mode="move"; this.busy=false; this.turnToken++;
-    Anim.reset(this.s); $("#ov").classList.remove("show");
-    this.refresh(); this.toast("Der Frost-Krieger beginnt.","info");
+  s:null, ui:{mode:null}, busy:false, mode:"ai", turnToken:0, loadouts:[[...DEFAULT_LOADOUT[0]],[...DEFAULT_LOADOUT[1]]], skillKey:"",
+  async start(){
+    this.turnToken++; const tok=this.turnToken; this.busy=true;
+    $("#ov").className=""; document.getElementById("fx").style.background="";
+    this.s=Logic.create(this.mode,this.loadouts); Anim.reset(this.s); this.refresh();
+    await Picker.open(0); if(tok!==this.turnToken) return;
+    if(this.mode==="2p"){ await Picker.open(1); if(tok!==this.turnToken) return; }
+    else this.loadouts[1]=[...DEFAULT_LOADOUT[1]];
+    this.s=Logic.create(this.mode,this.loadouts); Anim.reset(this.s);
+    this.ui.mode="move"; this.busy=false; this.refresh(); this.toast("Die Frost-Magierin beginnt.","info");
   },
-  humanTurn(){return !this.s.over && (this.mode==="2p"||this.s.active===0) && !this.s._skipping;},
+  humanTurn(){return this.s&&!this.s.over && (this.mode==="2p"||this.s.active===0) && !this.s._skipping;},
   canAct(){return !this.busy && this.humanTurn();},
   toast(msg,cls=""){const t=$("#toast");t.textContent=msg;t.className="show "+cls;clearTimeout(this._tt);this._tt=setTimeout(()=>t.className=cls,1500);},
   invalid(msg,x,y){Sound.fx.bad(); if(x!==undefined)R.tile(x,y,"bad",450); this.toast(msg);},
   highlights(){
     const m=new Map(), s=this.s; if(!this.humanTurn()||this.busy) return m;
     const set=(list,h)=>list.forEach(p=>m.set(p.x+","+p.y,h));
-    const f=Logic.foe(s);
-    if(this.ui.mode==="move") set(Logic.moveTargets(s),{fill:"rgba(168,132,70,A)",a:.22,stroke:"#d8b56c",dot:true});
-    if(this.ui.mode==="tp") set(Logic.tpTargets(s),{fill:"rgba(120,80,220,A)",a:.22,stroke:"#a98cff",dot:true});
-    if(this.ui.mode==="nova"){ set(Logic.novaArea(s),{fill:"rgba(56,189,248,A)",a:.18,stroke:"rgba(56,189,248,.55)"});
-      if(Logic.novaHits(s)) m.set(f.x+","+f.y,{fill:"rgba(200,20,10,A)",a:.35,stroke:"#ff5a40"}); }
-    if(this.ui.mode==="ice"){ const line=Logic.iceTargets(s); set(line,{fill:"rgba(56,189,248,A)",a:.12,stroke:"rgba(127,224,255,.5)"});
-      if(Logic.has(line,f.x,f.y)) m.set(f.x+","+f.y,{fill:"rgba(200,20,10,A)",a:.38,stroke:"#ff5a40"}); }
+    const f=Logic.foe(s), me=Logic.me(s), id=this.ui.mode;
+    const red={fill:"rgba(200,20,10,A)",a:.38,stroke:"#ff5a40"};
+    if(id==="move") set(Logic.moveTargets(s),{fill:"rgba(168,132,70,A)",a:.22,stroke:"#d8b56c",dot:true});
+    else if(id&&SKILLS[id]){ const d=SKILLS[id], t=Logic.targets(s,id);
+      if(d.kind==="tp") set(t,{fill:"rgba(120,80,220,A)",a:.22,stroke:"#a98cff",dot:true});
+      if(d.kind==="self"){ set(Logic.area(me,d.radius).filter(p=>!(p.x===me.x&&p.y===me.y)),{fill:"rgba(56,189,248,A)",a:.18,stroke:"rgba(56,189,248,.55)"}); if(t.length) m.set(f.x+","+f.y,red); }
+      if(d.kind==="line"){ const fire=d.el==="fire"; set(t,{fill:fire?"rgba(255,120,30,A)":"rgba(56,189,248,A)",a:.12,stroke:fire?"rgba(255,150,60,.5)":"rgba(127,224,255,.5)"}); if(Logic.has(t,f.x,f.y)) m.set(f.x+","+f.y,red); }
+      if(d.kind==="area"){ const fire=d.el==="fire"; set(t,{fill:fire?"rgba(255,120,30,A)":"rgba(150,220,255,A)",a:.1,stroke:fire?"rgba(255,150,60,.45)":"rgba(200,240,255,.45)"});
+        if(Logic.has(t,f.x,f.y)) m.set(f.x+","+f.y,red); }
+    }
     return m;
   },
   view(){const s=this.s;return{hl:this.highlights(),units:s.units.map((u,i)=>({u,v:Anim.v[i],active:s.active===i&&!s.over,foeV:Anim.v[1-i]}))};},
+  buildSkills(me){
+    const key=me.id+":"+me.skills.join(","); if(key===this.skillKey) return; this.skillKey=key;
+    const box=$("#skills"); box.innerHTML="";
+    me.skills.forEach(k=>{const d=SKILLS[k];const b=document.createElement("button");b.className="sk";b.dataset.sk=k;
+      b.innerHTML=`<svg viewBox="0 0 32 32">${ICONS[k]}</svg><span class="lbl">${d.name}</span><span class="sub">${d.sub}</span><span class="cd"></span>`;
+      b.addEventListener("click",()=>this.selectMode(k)); box.appendChild(b);});
+  },
   refresh(){
-    const s=this.s;
+    const s=this.s; if(!s) return;
     s.units.forEach((u,i)=>{const p=$("#p"+i);p.querySelector(".v").textContent=u.hp;
       p.querySelector(".bar i").style.transform=`scaleX(${u.hp/100})`;p.querySelector(".orb i").style.height=u.hp+"%";
-      p.classList.toggle("frozen",u.frozen);p.classList.toggle("active",s.active===i&&!s.over);});
+      p.classList.toggle("frozen",u.frozen);p.classList.toggle("active",s.active===i&&!s.over);
+      p.querySelector(".badge").textContent=u.frozen?"❄ EIS":"LAHM"; p.classList.toggle("slowed",u.slow&&!u.frozen);});
     const me=Logic.me(s);
+    const shown=(this.mode==="ai")?s.units[0]:me; this.buildSkills(shown);
     $("#round").textContent="RUNDE "+s.round;
     $("#turn").textContent=me.name+(this.mode==="ai"&&s.active===1?" (KI)":"");
     $("#turn").style.color=s.active===0?"#D9F4FF":"#e8a08a";
-    $("#steps").textContent=me.frozen&&s._skipping?"EINGEFROREN":`Schritte: ${s.steps}/2`;
+    $("#steps").textContent=me.frozen&&s._skipping?"EINGEFROREN":`Schritte: ${s.steps}/${s.maxSteps}`;
     const can=this.canAct();
-    document.querySelectorAll(".sk").forEach(b=>{const k=b.dataset.sk;const cd=k==="ice"?0:me.cd[k];
+    document.querySelectorAll(".sk").forEach(b=>{const k=b.dataset.sk;const cd=shown.cd[k]||0;
       b.classList.toggle("oncd",cd>0); b.querySelector(".cd").textContent=cd>0?cd:"";
-      b.disabled=!can||s.used[k]||cd>0; b.classList.toggle("sel",this.ui.mode===k&&can);});
+      b.disabled=!can||!!s.used[k]||cd>0; b.classList.toggle("sel",this.ui.mode===k&&can);});
     $("#moveBtn").disabled=!can||s.steps===0; $("#moveBtn").classList.toggle("sel",this.ui.mode==="move"&&can&&s.steps>0);
     $("#endBtn").disabled=!can;
     $("#modeBtn").textContent="MODUS: "+(this.mode==="ai"?"KI":"2P");
@@ -612,59 +737,38 @@ const Game = {
     if(!this.canAct())return; const s=this.s,me=Logic.me(s);
     if(m==="move"&&s.steps===0) return this.invalid("Keine Schritte mehr.");
     if(m!=="move"&&s.used[m]) return this.invalid("In diesem Zug schon eingesetzt.");
-    if((m==="tp"||m==="nova")&&me.cd[m]>0) return this.invalid("Abklingzeit: "+me.cd[m]+" Züge.");
+    if(m!=="move"&&me.cd[m]>0) return this.invalid("Abklingzeit: "+me.cd[m]+" Züge.");
     Sound.fx.click(); this.ui.mode=this.ui.mode===m?null:m;
-    if(this.ui.mode==="nova"&&!Logic.novaHits(s)) this.toast("Gegner außer Reichweite (2).");
-    else if(this.ui.mode==="nova") this.toast("Gegner antippen zum Wirken.","info");
+    if(this.ui.mode&&SKILLS[m]&&SKILLS[m].kind==="self") this.toast(Logic.targets(s,m).length?"Gegner antippen zum Wirken.":"Gegner außer Reichweite ("+SKILLS[m].radius+").", Logic.targets(s,m).length?"info":"");
     this.refresh();
   },
   async onTile(x,y){
-    if(!this.canAct())return; const s=this.s, me=Logic.me(s), f=Logic.foe(s);
-    if(x===me.x&&y===me.y){ if(this.ui.mode==="nova") return this.doNova(); this.selectMode("move"); return; }
-    switch(this.ui.mode){
-      case "move": return this.doMove(x,y);
-      case "tp": return this.doTeleport(x,y);
-      case "nova": return Logic.has(Logic.novaArea(s),x,y)?this.doNova():this.invalid("Außerhalb der Nova.",x,y);
-      case "ice": return this.doIce(x,y);
-      default:
-        if(Logic.has(Logic.moveTargets(s),x,y)){this.ui.mode="move";return this.doMove(x,y);}
-        if(x===f.x&&y===f.y&&!s.used.ice&&Logic.has(Logic.iceTargets(s),x,y)){this.ui.mode="ice";this.refresh();return;}
-        this.invalid("Wähle eine Aktion.",x,y);
+    if(!this.canAct())return; const s=this.s, me=Logic.me(s), f=Logic.foe(s), id=this.ui.mode;
+    if(id&&SKILLS[id]){
+      if(SKILLS[id].kind==="self") return Logic.has(Logic.area(me,SKILLS[id].radius),x,y)?this.cast(id,x,y):this.invalid("Außerhalb der Nova.",x,y);
+      return this.cast(id,x,y);
     }
+    if(x===me.x&&y===me.y){ this.selectMode("move"); return; }
+    if(id==="move") return this.doMove(x,y);
+    if(Logic.has(Logic.moveTargets(s),x,y)){this.ui.mode="move";return this.doMove(x,y);}
+    if(x===f.x&&y===f.y){ const k=me.skills.find(k=>SKILLS[k].kind==="line"&&Logic.has(Logic.targets(s,k),x,y)); if(k){this.ui.mode=k;this.refresh();return;} }
+    this.invalid("Wähle eine Aktion.",x,y);
   },
   async run(fn){ this.busy=true; this.refresh(); const tok=this.turnToken; try{ await fn(); } finally { if(tok===this.turnToken){ this.busy=false; this.afterAction(); } } },
   async doMove(x,y,ai){ const s=this.s, id=s.active, r=Logic.move(s,x,y);
     if(!r) return ai?false:this.invalid(s.steps===0?"Keine Schritte mehr.":"Ungültiges Feld.",x,y);
     await (ai?Anim.move(id,r.from,{x,y}):this.run(()=>Anim.move(id,r.from,{x,y}))); return true; },
-  async doTeleport(x,y,ai){ const s=this.s,id=s.active,r=Logic.teleport(s,x,y);
-    if(!r) return ai?false:this.invalid("Ungültiges Teleportziel.",x,y);
+  async cast(id,x,y,ai){ const s=this.s, uid=s.active, r=Logic.use(s,id,x,y);
+    if(!r){ const d=SKILLS[id]; return ai?false:this.invalid(d.kind==="line"?"Nur gerade Linien, max. "+d.range+" Felder.":d.kind==="self"?"Gegner außer Reichweite.":"Ungültiges Ziel.",x,y); }
     this.ui.mode=s.steps>0?"move":null;
-    await (ai?Anim.teleport(id,r.from,{x,y}):this.run(()=>Anim.teleport(id,r.from,{x,y}))); return true; },
-  async doNova(ai){ const s=this.s,id=s.active,me=Logic.me(s),f=Logic.foe(s);
-    if(!Logic.novaHits(s)) return ai?false:this.invalid("Gegner außer Reichweite.",f.x,f.y);
-    const fx=f.x,fy=f.y; const r=Logic.nova(s); if(!r) return ai?false:this.invalid("Nicht möglich.");
-    this.ui.mode=s.steps>0?"move":null;
-    const play=async()=>{ await Anim.cast(id); Sound.fx.nova(); R.wave(me.x,me.y); $("#flash").style.background="#bfeaff"; Effects.flash(.45); R.shake(6);
-      R.burst(me.x,me.y,60,["#d9f4ff","#38BDF8","#ffffff","#7fe0ff"],4.5,.3);
-      Logic.novaArea(s).forEach(p=>R.tile(p.x,p.y,"frost",700)); await sleep(180);
-      await Anim.hit(1-id); this.refresh(); if(f.hp>0) await Anim.freeze(1-id,fx,fy); else await Anim.die(1-id); };
-    await (ai?play():this.run(play)); return true; },
-  async doIce(x,y,ai){ const s=this.s,id=s.active,from={x:Logic.me(s).x,y:Logic.me(s).y};
-    const r=Logic.ice(s,x,y); if(!r) return ai?false:this.invalid("Nur gerade Linien, max. 4 Felder.",x,y);
-    this.ui.mode=s.steps>0?"move":null;
-    const play=async()=>{ const dir={x:Math.sign(x-from.x)-Math.sign(y-from.y),y:Math.sign(x-from.x)+Math.sign(y-from.y)};
-      Anim.attack(id,{x:clamp(dir.x,-1,1),y:clamp(dir.y,-1,1)}); Sound.fx.iceShot();
-      const dur=90*cheb(from,r)+80; R.bolt(from,{x:r.x,y:r.y},dur); await sleep(dur);
-      R.burst(r.x,r.y,26,["#d9f4ff","#38BDF8","#ffffff"],3.5,.45);
-      if(r.hit){ Sound.fx.iceHit(); R.tile(r.x,r.y,"hit",500); $("#flash").style.background="#ffffff"; Effects.flash(.25); await Anim.hit(1-id); this.refresh(); if(Logic.foe(s).hp===0) await Anim.die(1-id);}
-      else { Sound.fx.step(); this.toast("Verfehlt!","info"); } };
+    const play=()=>SkillFX.play(id,uid,r,s);
     await (ai?play():this.run(play)); return true; },
   afterAction(){
     const s=this.s; this.refresh();
     if(s.over) return this.finish();
     if(this.humanTurn()){
       if(this.ui.mode==="move"&&s.steps===0) this.ui.mode=null;
-      if(Logic.turnExhausted(s)) { this.busy=true; this.refresh(); const tok=this.turnToken; setTimeout(()=>{ if(tok===this.turnToken){this.busy=false;this.endTurn();} },450); }
+      if(Logic.turnExhausted(s)){ this.busy=true; this.refresh(); const tok=this.turnToken; setTimeout(()=>{ if(tok===this.turnToken){this.busy=false;this.endTurn();} },450); }
       this.refresh();
     }
   },
@@ -673,13 +777,13 @@ const Game = {
     this.turnToken++; const tok=this.turnToken; this.busy=true;
     Logic.endTurn(s); this.ui.mode=null; Sound.fx.turn(); this.refresh();
     const me=Logic.me(s);
-    if(s._skipping){ // frozen: skip exactly this turn
+    if(s._skipping){
       this.toast(me.name+" ist eingefroren!","info"); R.burst(me.x,me.y,14,["#d9f4ff","#38BDF8"],1.5,.6);
       await sleep(1300); if(tok!==this.turnToken)return; me.frozen=false; this.refresh(); await sleep(250); if(tok!==this.turnToken)return;
       return this.endTurn();
     }
     if(this.mode==="2p"){ await this.banner(me.name+" ist am Zug", s.active===0?"ice":""); if(tok!==this.turnToken)return; }
-    else if(s.active===0) this.toast("Dein Zug.","info");
+    else if(s.active===0) this.toast(s.maxSteps<2?"Dein Zug – gelähmt: 1 Schritt.":"Dein Zug.","info");
     if(this.mode==="ai"&&s.active===1){ await this.aiTurn(tok); return; }
     this.busy=false; this.ui.mode="move"; this.refresh();
   },
@@ -690,14 +794,11 @@ const Game = {
     const plan=AI.plan(s); const ok=()=>tok===this.turnToken&&!s.over;
     if(plan){
       for(const p of plan.pre){ if(!ok())return; await this.doMove(p.x,p.y,true); this.refresh(); await sleep(260); }
-      for(const k of plan.skills){ if(!ok())break;
-        if(k.type==="ice") await this.doIce(k.x,k.y,true);
-        else if(k.type==="nova") await this.doNova(true);
-        else if(k.type==="tp") await this.doTeleport(k.x,k.y,true);
-        this.refresh(); await sleep(350); }
-      for(const p of plan.post){ if(!ok())return; await this.doMove(p.x,p.y,true); this.refresh(); await sleep(260); }
+      for(const k of plan.skills){ if(!ok())break; await this.cast(k.id,k.x,k.y,true); this.refresh(); await sleep(350); }
+      for(const p of plan.post){ if(!ok())break; await this.doMove(p.x,p.y,true); this.refresh(); await sleep(260); }
     }
-    if(!ok()){ if(s.over&&tok===this.turnToken) this.finish(); return; }
+    if(s.over){ if(tok===this.turnToken) this.finish(); return; }
+    if(tok!==this.turnToken) return;
     await sleep(300); if(tok!==this.turnToken) return; this.endTurn();
   },
   finish(){
@@ -709,11 +810,30 @@ const Game = {
       const o=$("#ov"); o.className="show "+(s.winner===0?"ice":"");
       $("#ovT").textContent=this.mode==="2p"?w.name.toUpperCase()+" SIEGT":(humanWon?"SIEG":"NIEDERLAGE");
       $("#ovP").textContent=this.mode==="2p"?`Nach ${s.round} Runden liegt ${s.units[1-s.winner].name} im Staub.`:
-        humanWon?"Der Abgrund-Dämon zerfällt zu Asche. Das Eis hat gesiegt.":"Die Kälte erlischt. Der Abgrund verschlingt den Frost-Krieger.";
+        humanWon?"Der Abgrund-Dämon zerfällt zu Asche. Das Eis hat gesiegt.":"Die Kälte erlischt. Der Abgrund verschlingt die Frost-Magierin.";
       if(!humanWon){document.getElementById("fx").style.background="radial-gradient(ellipse at 50% 50%,#0006 30%,#000d 80%)";}
-      const b=$("#ovB");b.textContent="NEUE RUNDE";b.onclick=()=>{document.getElementById("fx").style.background="";Sound.unlock();this.start();};
+      const b=$("#ovB");b.textContent="NEUE RUNDE";b.onclick=()=>{Sound.unlock();this.start();};
     },700);
   }
+};
+
+/* =========================================================
+   SKILL PICKER (loadout: choose 3 of 7)
+   ========================================================= */
+const Picker = {
+  open(pid){ return new Promise(res=>{
+    const el=$("#pick"), grid=$("#pickGrid"), btn=$("#pickGo"); let sel=[...Game.loadouts[pid]];
+    $("#pickT").textContent=(pid===0?"Frost-Magierin":"Abgrund-Dämon")+": Zauber wählen";
+    el.className="show "+(pid===0?"ice":"");
+    const draw=()=>{ grid.innerHTML="";
+      SKILL_IDS.forEach(k=>{const d=SKILLS[k];const c=document.createElement("button");c.className="pc"+(sel.includes(k)?" on":"");
+        c.innerHTML=`<svg viewBox="0 0 32 32">${ICONS[k]}</svg><div><b>${d.name}</b><i>${d.sub}${d.cd?" · CD "+d.cd:""}</i><span>${d.desc}</span></div>`;
+        c.onclick=()=>{Sound.unlock();Sound.fx.click(); if(sel.includes(k)) sel=sel.filter(x=>x!==k); else if(sel.length<3) sel.push(k); else {sel.shift();sel.push(k);} draw();};
+        grid.appendChild(c);});
+      btn.disabled=sel.length!==3; btn.textContent=sel.length===3?"KAMPF BEGINNEN":`NOCH ${3-sel.length} WÄHLEN`; };
+    draw();
+    btn.onclick=()=>{ if(sel.length!==3) return; Sound.unlock(); Game.loadouts[pid]=SKILL_IDS.filter(k=>sel.includes(k)); el.className=""; btn.onclick=null; res(); };
+  });}
 };
 
 /* =========================================================
@@ -724,16 +844,14 @@ const Game = {
   document.addEventListener("pointerdown",()=>Sound.unlock(),{capture:true});
   cv.addEventListener("pointerdown",e=>{ e.preventDefault(); const r=cv.getBoundingClientRect();
     const t=R.pick(e.clientX-r.left,e.clientY-r.top); if(t) Game.onTile(t.x,t.y); });
-  document.querySelectorAll(".sk").forEach(b=>b.addEventListener("click",()=>Game.selectMode(b.dataset.sk)));
   $("#moveBtn").addEventListener("click",()=>Game.selectMode("move"));
   $("#endBtn").addEventListener("click",()=>{ if(Game.canAct()){Game.endTurn();} });
   $("#muteBtn").addEventListener("click",e=>{const m=Sound.toggle();e.target.textContent="TON: "+(m?"AUS":"AN");});
-  $("#restartBtn").addEventListener("click",()=>{document.getElementById("fx").style.background="";Game.start();});
-  $("#modeBtn").addEventListener("click",()=>{Game.mode=Game.mode==="ai"?"2p":"ai";document.getElementById("fx").style.background="";Game.start();Game.toast(Game.mode==="ai"?"Modus: gegen KI":"Modus: 2 Spieler lokal","info");});
+  $("#restartBtn").addEventListener("click",()=>Game.start());
+  $("#modeBtn").addEventListener("click",()=>{Game.mode=Game.mode==="ai"?"2p":"ai";Game.start();});
   document.addEventListener("gesturestart",e=>e.preventDefault());
-  document.addEventListener("touchmove",e=>e.preventDefault(),{passive:false});
+  document.addEventListener("touchmove",e=>{ if(!e.target.closest("#pickGrid")) e.preventDefault(); },{passive:false});
   document.addEventListener("dblclick",e=>e.preventDefault());
-  // film grain texture
   const g=document.createElement("canvas");g.width=g.height=128;const gx=g.getContext("2d"),id=gx.createImageData(128,128);
   for(let i=0;i<id.data.length;i+=4){const v=Math.random()*255;id.data[i]=id.data[i+1]=id.data[i+2]=v;id.data[i+3]=255;}
   gx.putImageData(id,0,0);$("#grain").style.background=`url(${g.toDataURL()})`;
