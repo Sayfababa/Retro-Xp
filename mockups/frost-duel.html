@@ -126,13 +126,13 @@ html,body{height:100dvh;width:100vw;overflow:hidden;background:var(--bg);color:v
 <div id="app">
   <div id="hud">
     <div class="hp panel" id="p0">
-      <div class="row"><div class="orb"><i></i></div><div class="name">Frost-Magierin</div></div>
+      <div class="row"><div class="orb"><i></i></div><div class="name">Eiskönigin</div></div>
       <div class="bar"><i></i></div>
       <div class="hpnum"><span class="v">100</span><span class="badge">❄ EIS</span></div>
     </div>
     <div class="panel" id="mid">
       <div id="round">RUNDE 1</div>
-      <div id="turn">Frost-Magierin</div>
+      <div id="turn">Eiskönigin</div>
       <div id="steps">Schritte: 2/2</div>
     </div>
     <div class="hp panel" id="p1">
@@ -255,7 +255,7 @@ const Logic = {
     const mk=(id,name,x,y,skills)=>({id,name,x,y,hp:100,frozen:false,slow:false,shield:0,mirror:false,skills:[...skills],
       cd:Object.fromEntries(skills.map(k=>[k,0])),fresh:Object.fromEntries(skills.map(k=>[k,false]))});
     return { mode, over:false, winner:-1, active:0, round:1, steps:2, maxSteps:2, used:{}, _skipping:false, walls:[],
-      units:[ mk(0,"Frost-Magierin",1,4,loadouts[0]), mk(1,"Abgrund-Dämon",3,0,loadouts[1]) ] };
+      units:[ mk(0,"Eiskönigin",1,4,loadouts[0]), mk(1,"Abgrund-Dämon",3,0,loadouts[1]) ] };
   },
   clone(s){ return {...s, used:{...s.used}, walls:s.walls.map(w=>({...w})), units:s.units.map(u=>({...u,skills:u.skills,cd:{...u.cd},fresh:{...u.fresh}}))}; },
   occupied(s,x,y){return s.units.some(u=>u.hp>0&&u.x===x&&u.y===y)||this.wallAt(s,x,y);},
@@ -435,11 +435,8 @@ const R = (()=>{
   const particles=[], rings=[], bolts=[], tileFx=new Map(); let shake=0, waves=[];
   // ---- sprites ----
   const SPR={
-    warrior:{pal:{k:"#07080c",h:"#1c2a4a",H:"#2f4a7a",l:"#c8d8e8",s:"#d8b8a0",e:"#7fe0ff",r:"#1a2546",R:"#3d5a90",w:"#d9f4ff",g:"#a88446"},rows:[
-      "......kkk.......",".....khHHk......","....khHHHHk.....","...khHllllhk....","...khlsssslk....","...khlsesesk....",
-      "...khlssssk.....","...khkkwwkhk....","..kkhRwggwRkk...","..ksRRrwwrRRsk..","..ksRrrggrrRsk..","...kkRrrrrRkk...",
-      "....kRrrrrrk....","....kRrwwrRk....","...kRrrwwrrRk...","...kRrrwwrrRk...","..kRRrrwwrrRRk..","..kRrrrwwrrrRk..",
-      "..kwwwwwwwwwwk..","..kkkkkkkkkkkk.."]},
+    warrior:{pal:{k:"#04060a",d:"#18202c",m:"#2a3646",l:"#4d5d72",h:"#8a9db3",w:"#d4e3ee",c:"#c4dcec",C:"#6f9cc0",v:"#090c12",s:"#1d2532",S:"#33425a"},rows:[
+      "........ww..........","....w....cc....w....","....c.w..cc..w.c....",".....cc.cccc.cc.....","...w.cccccccccc.w...","....cCCcCCCCcCCc....",".....kCCCCCCCCk.....",".....kvvvvvvvvk.....",".....kvvvvvvvvk.....",".....kvvvvvvvvk.....","......kvvvvvvk......","..hw.kkmllllmkk.wh..",".hlhkmlhmmmmhlmkhlh.","kmlmkmllhhhhllmkmlmk","kdmkdmmlhwwhlmmdkmdk","kdmkdmlmhhhhmlmdkmdk","kdk.kdmmllllmmdk.kdk","kmk.kdmmhllhmmdk.kmk","kwk.ksdmmhhmmdsk.kwk","...ksSdmmllmmdSsk...","...ksSsdmhhmdsSsk...","..ksSssdmllmdssSsk..","..ksSssdmhhmdssSsk..",".ksSsssdmllmdsssSsk.",".ksSssssdhhdssssSsk.","ksSsssssdlldsssssSsk","ksSsSsssdhhdsssSsSsk","kwSwSwswdlldwswSwSwk","kkwkwkwkkwwkkwkwkwkk"]},
     demon:{pal:{k:"#060202",d:"#2a0b0b",r:"#5a0d0d",m:"#8a1414",h:"#9a8a72",H:"#cfc0a0",e:"#ff3a1a",c:"#d8cdb8",t:"#e8e0d0"},rows:[
       ".H............H.",".Hh..........hH.","..hh........hh..","...hh.kkkk.hh...","....hkddddkh....","....kdeddedk....",
       "....kddmmddk....","....kdtdtddk....","..kkkkddddkkkk..",".kddrddmmddrddk.","kddrrdmrrmdrrddk","kdk.kdrmmrdk.kdk",
@@ -447,7 +444,7 @@ const R = (()=>{
       "..kddk....kddk..","..kcck....kcck.."]}
   };
   function bake(def,white){
-    const h=def.rows.length,w=16,c=document.createElement("canvas");c.width=w;c.height=h;const x=c.getContext("2d");
+    const h=def.rows.length,w=Math.max(...def.rows.map(r=>r.length)),c=document.createElement("canvas");c.width=w;c.height=h;const x=c.getContext("2d");
     def.rows.forEach((row,j)=>{for(let i=0;i<w;i++){const ch=row[i]; if(!ch||ch===".")continue; x.fillStyle=white?"#fff":(def.pal[ch]||"#f0f");x.fillRect(i,j,1,1);}});
     return c;
   }
@@ -464,8 +461,8 @@ const R = (()=>{
   function resize(){
     const r=cv.getBoundingClientRect(); dpr=Math.min(3,window.devicePixelRatio||1);
     W=r.width;H=r.height; cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr);
-    TW=Math.min(W*0.96/5,H/3.75); D=TW*0.2;
-    const head=TW*0.95; ox=W/2; oy=(H-(2.5*TW+D+head))/2+head;
+    TW=Math.min(W*0.96/5,H/3.95); D=TW*0.2;
+    const head=TW*1.2; ox=W/2; oy=(H-(2.5*TW+D+head))/2+head;
   }
   const P=(gx,gy)=>({x:ox+(gx-gy)*TW/2, y:oy+(gx+gy)*TW/4});
   function pick(px,py){ // exact point-in-diamond via inverse iso transform
@@ -515,7 +512,7 @@ const R = (()=>{
   }
   function drawUnit(u,v,time,isActive,foe){
     const c=P(v.rx+.5,v.ry+.5); const isW=u.id===0;
-    const px=TW/22, sw=16*px, sh=20*px;
+    const px=TW/22, img=isW?baked.warrior:baked.demon, sw=img.width*px, sh=img.height*px;
     const bob=v.dead>0?0:Math.sin(time/380+u.id*2)*px*.8;
     // shadow
     ctx.fillStyle=`rgba(0,0,0,${.55*v.alpha})`; ctx.beginPath(); ctx.ellipse(c.x,c.y,TW*.26*(1-v.hop*.3),TW*.11*(1-v.hop*.3),0,0,7); ctx.fill();
@@ -536,18 +533,21 @@ const R = (()=>{
     ctx.imageSmoothingEnabled=false;
     ctx.drawImage(isW?baked.warrior:baked.demon,-sw/2,-sh,sw,sh);
     // weapon
-    if(isW){ ctx.save(); ctx.translate(sw*.42,-sh*.42); ctx.rotate(.12+v.swing*.9);
-      ctx.fillStyle="#3a2414";ctx.fillRect(-px*.6,-sh*.5,px*1.2,sh*.95);
-      ctx.fillStyle="#6b5226";ctx.fillRect(-px*1.2,-sh*.5,px*2.4,px);
-      const og=ctx.createRadialGradient(0,-sh*.58,1,0,-sh*.58,px*3.2);og.addColorStop(0,"#ffffff");og.addColorStop(.4,"#7fe0ff");og.addColorStop(1,"rgba(56,189,248,0)");
-      ctx.shadowColor="#38BDF8";ctx.shadowBlur=10+5*Math.sin(time/200);ctx.fillStyle=og;ctx.beginPath();ctx.arc(0,-sh*.58,px*3.2,0,7);ctx.fill();
-      ctx.fillStyle="#d9f4ff";ctx.beginPath();ctx.moveTo(0,-sh*.58-px*1.8);ctx.lineTo(px*1.1,-sh*.58);ctx.lineTo(0,-sh*.58+px*1.8);ctx.lineTo(-px*1.1,-sh*.58);ctx.fill();
+    if(isW){ ctx.save(); ctx.translate(sw*.42,-sh*.38); ctx.rotate(.38+v.swing*1.1);
+      ctx.fillStyle="#9fb3c8";ctx.fillRect(-px*.5,-sh*.55,px,sh*.95);
+      ctx.fillStyle="#d4e3ee";ctx.fillRect(-px*.5,-sh*.55,px*.4,sh*.95);
+      ctx.fillStyle="#2a3646";for(let k=0;k<3;k++)ctx.fillRect(-px*.8,sh*.05+k*px*2.2,px*1.6,px*.8);
+      ctx.shadowColor="#7fe0ff";ctx.shadowBlur=6+3*Math.sin(time/260);ctx.fillStyle="#cfe9f7";
+      ctx.beginPath();ctx.moveTo(0,-sh*.55);ctx.lineTo(-px*1.4,-sh*.6);ctx.lineTo(-px*.6,-sh*.68);ctx.lineTo(-px*2.2,-sh*.78);ctx.lineTo(-px*.3,-sh*.8);
+      ctx.lineTo(0,-sh*.95);ctx.lineTo(px*.4,-sh*.8);ctx.lineTo(px*2.4,-sh*.72);ctx.lineTo(px*.7,-sh*.66);ctx.lineTo(px*1.5,-sh*.58);ctx.closePath();ctx.fill();
+      ctx.fillStyle="#ffffff";ctx.fillRect(-px*.2,-sh*.88,px*.4,sh*.25);
       ctx.shadowBlur=0;ctx.restore();
+      if(Math.random()<.06) R.mist(c.x+(Math.random()-.5)*sw, c.y-Math.random()*sh*.4);
     } else { // glowing eyes / embers
       ctx.fillStyle=`rgba(255,60,20,${.5+.5*Math.sin(time/150)})`;ctx.shadowColor="#ff2a00";ctx.shadowBlur=8;ctx.fillRect(-sw/2+6*px,-sh+5*px,px,px);ctx.fillRect(-sw/2+9*px,-sh+5*px,px,px);ctx.shadowBlur=0;
       if(v.swing>0){ctx.strokeStyle=`rgba(255,80,40,${v.swing})`;ctx.lineWidth=2;for(let k=0;k<3;k++){ctx.beginPath();ctx.arc(sw*.4,-sh*.4,sw*.3+k*3,-1.2,.4);ctx.stroke();}}
     }
-    if(isW){ctx.fillStyle=`rgba(127,224,255,${.6+.4*Math.sin(time/170)})`;ctx.shadowColor="#38BDF8";ctx.shadowBlur=8;ctx.fillRect(-sw/2+7*px,-sh+5*px,px,px);ctx.fillRect(-sw/2+9*px,-sh+5*px,px,px);ctx.shadowBlur=0;}
+    if(isW){ctx.fillStyle=`rgba(127,224,255,${.6+.4*Math.sin(time/170)})`;ctx.shadowColor="#38BDF8";ctx.shadowBlur=8;ctx.globalAlpha*=.55;ctx.fillRect(-sw/2+7*px,-sh+8*px,px,px*.6);ctx.fillRect(-sw/2+12*px,-sh+8*px,px,px*.6);ctx.shadowBlur=0;}
     if(v.flash>0){ctx.globalAlpha=v.flash*v.alpha;ctx.drawImage(isW?baked.warriorW:baked.demonW,-sw/2,-sh,sw,sh);}
     ctx.restore();
     if(u.shield>0&&v.dead===0){ const p=.5+.5*Math.sin(time/250);
@@ -639,6 +639,7 @@ const R = (()=>{
     ring(x,y,c){rings.push({x,y,c,t0:performance.now(),dur:500});},
     wave(x,y){waves.push({x,y,t0:performance.now(),dur:650});},
     bolt(a,b,dur,kind="ice"){bolts.push({a,b,t0:performance.now(),dur,kind});},
+    mist(x,y){particles.push({x,y,vx:(Math.random()-.5)*.3,vy:-.15-Math.random()*.2,life:.8,decay:.008,c:"rgba(190,225,245,.5)",s:3});},
     snow(tiles,dur){const n=Math.round(dur/12);for(let k=0;k<n;k++){const t=tiles[k%tiles.length];const c=P(t.x+Math.random(),t.y+Math.random());
       particles.push({x:c.x+TW*.6,y:c.y-TW*(1+Math.random()*1.2),vx:-1.2-Math.random(),vy:1.6+Math.random(),life:1,decay:.02+Math.random()*.02,c:Math.random()<.7?"#ffffff":"#7fe0ff",s:2+Math.random()*2});}},
     tile(x,y,type,dur=600){tileFx.set(x+","+y,{type,t0:performance.now(),dur});},
@@ -750,7 +751,7 @@ const Game = {
     if(this.mode==="2p"){ await Picker.open(1); if(tok!==this.turnToken) return; }
     else this.loadouts[1]=[...DEFAULT_LOADOUT[1]];
     this.s=Logic.create(this.mode,this.loadouts); Anim.reset(this.s);
-    this.ui.mode="move"; this.busy=false; this.refresh(); this.toast("Die Frost-Magierin beginnt.","info");
+    this.ui.mode="move"; this.busy=false; this.refresh(); this.toast("Die Eiskönigin beginnt.","info");
   },
   humanTurn(){return this.s&&!this.s.over && (this.mode==="2p"||this.s.active===0) && !this.s._skipping;},
   canAct(){return !this.busy && this.humanTurn();},
@@ -879,7 +880,7 @@ const Game = {
       const o=$("#ov"); o.className="show "+(s.winner===0?"ice":"");
       $("#ovT").textContent=this.mode==="2p"?w.name.toUpperCase()+" SIEGT":(humanWon?"SIEG":"NIEDERLAGE");
       $("#ovP").textContent=this.mode==="2p"?`Nach ${s.round} Runden liegt ${s.units[1-s.winner].name} im Staub.`:
-        humanWon?"Der Abgrund-Dämon zerfällt zu Asche. Das Eis hat gesiegt.":"Die Kälte erlischt. Der Abgrund verschlingt die Frost-Magierin.";
+        humanWon?"Der Abgrund-Dämon zerfällt zu Asche. Das Eis hat gesiegt.":"Die Kälte erlischt. Der Abgrund verschlingt die Eiskönigin.";
       if(!humanWon){document.getElementById("fx").style.background="radial-gradient(ellipse at 50% 50%,#0006 30%,#000d 80%)";}
       const b=$("#ovB");b.textContent="NEUE RUNDE";b.onclick=()=>{Sound.unlock();this.start();};
     },700);
@@ -892,7 +893,7 @@ const Game = {
 const Picker = {
   open(pid){ return new Promise(res=>{
     const el=$("#pick"), grid=$("#pickGrid"), btn=$("#pickGo"); let sel=[...Game.loadouts[pid]];
-    $("#pickT").textContent=(pid===0?"Frost-Magierin":"Abgrund-Dämon")+": Zauber wählen";
+    $("#pickT").textContent=(pid===0?"Eiskönigin":"Abgrund-Dämon")+": Zauber wählen";
     el.className="show "+(pid===0?"ice":"");
     const draw=()=>{ grid.innerHTML="";
       for(const cat of Object.keys(CATS)){ const hdr=document.createElement("div");hdr.className="pcat";hdr.textContent=CATS[cat];grid.appendChild(hdr);
