@@ -339,6 +339,24 @@ h3::after{background:linear-gradient(90deg,var(--line2),transparent)}
 .gem{width:20px;vertical-align:-4px}
 .ab.ice,.ab.red{box-shadow:none;padding:14px 4px;text-shadow:0 1px 2px #000,0 0 6px #000}
 .chip::before{flex:none}
+
+/* ===== ohne Bild-Rahmen ===== */
+.panel{border:1px solid #000;background:#0e0c0b;box-shadow:inset 0 0 0 1px var(--line),inset 0 0 0 2px #000,0 2px 6px #000c}
+#hud .panel,#chains,#log{border-width:1px}
+.hp{padding:10px 8px 8px}
+.port .frm{display:none}
+.port{width:92px;height:92px;box-shadow:0 0 0 1px #000,0 0 0 2px var(--gold),0 0 0 3px #000,0 6px 14px #000}
+.port.foe{box-shadow:0 0 0 1px #000,0 0 0 2px #8a3a2a,0 0 0 3px #000,0 6px 14px #000}
+.port img:not(.frm),.port.foe img:not(.frm),.port.foe.boss img:not(.frm){left:0;top:0;width:100%;height:100%}
+.port.foe img:not(.frm){object-position:50% 40%}
+.port.boss{box-shadow:0 0 0 1px #000,0 0 0 2px #d9701c,0 0 0 3px #000,0 0 14px #d9701c66}
+.eq,.it{background:#090807;box-shadow:inset 0 0 0 1px #000,inset 0 0 0 2px #2a221a!important}
+.eq.has.r0,.it.r0{box-shadow:inset 0 0 0 1px #000,inset 0 0 0 2px #6a6a6a!important}
+.eq.has.r1,.it.r1{box-shadow:inset 0 0 0 1px #000,inset 0 0 0 2px #3f55c0!important}
+.eq.has.r2,.it.r2{box-shadow:inset 0 0 0 1px #000,inset 0 0 0 2px #b0942a!important}
+.eq.has.r3,.it.r3{box-shadow:inset 0 0 0 1px #000,inset 0 0 0 2px #d06a10!important}
+.eq .gimg,.it .gimg{inset:3px;width:calc(100% - 6px);height:calc(100% - 6px);border-radius:0}
+.tipIc img{box-shadow:none}
 </style>
 </head>
 <body>
@@ -812,8 +830,7 @@ const LEGROW={krone:1,glutherz:1,zyklus:1,frostschritt:1,zweifeuer:1,sturm:1,ech
 const itemImg=it=>IMG[`g_${it.slot}_${it.leg&&LEGROW[it.leg]?3:Math.min(it.rar,2)}`];
 {const st=document.createElement("style");st.textContent=[["chill","chill"],["frozen","frozen"],["burn","burn"],["brit","brittle"],["vuln","vuln"],["rage","rage"]]
   .map(([c,k])=>`.c-${c}::before{content:"";display:inline-block;width:14px;height:14px;margin:-2px 4px -3px -1px;background:url(${IMG["sp_"+k]}) center/cover;box-shadow:0 0 0 1px #000}`).join("")
-  +`.panel{border-image:url(${IMG.ui_panel}) 26 fill / 12px / 2px stretch}.ab.ice{background:url(${IMG.ui_btn_ice}) center/100% 100%}.ab.red{background:url(${IMG.ui_btn_red}) center/100% 100%}
-  .eq,.it{background:url(${IMG.ui_slot0}) center/100% 100%}.eq.r1,.it.r1{background-image:url(${IMG.ui_slot1})}.eq.r2,.it.r2{background-image:url(${IMG.ui_slot2})}.eq.r3,.it.r3{background-image:url(${IMG.ui_slot3})}
+  +`.ab.ice{background:url(${IMG.ui_btn_ice}) center/100% 100%}.ab.red{background:url(${IMG.ui_btn_red}) center/100% 100%}
   .slot.heavy::after{content:"";width:16px;height:16px;top:2px;left:2px;background:url(${IMG.ui_skull}) center/contain no-repeat}
   .hdiv{height:20px;background:url(${IMG.ui_divider}) center/contain no-repeat}`;
   document.head.appendChild(st);}
@@ -833,7 +850,7 @@ function hud(cur){
   $("#hH .bar i").style.transform=`scaleX(${h.hp/h.max})`;$("#hH .hpnum").textContent=`${h.hp}/${h.max}`;
   $("#hH .bar u").style.width=Math.min(100,h.shield/h.max*100)+"%";
   $("#hH .chips").innerHTML=(h.shield?`<span class="chip c-shield">SCHILD ${h.shield}</span>`:"")+(F.momentum?`<span class="chip c-brit">SCHWUNG</span>`:"");
-  $("#hE .name").textContent=F.foe.n;$("#frmE").src=F.foe.boss?IMG.ui_fr_boss:IMG.ui_fr_foe;$("#hE .port").classList.toggle("boss",!!F.foe.boss);$("#hE .bar i").style.transform=`scaleX(${e.hp/e.max})`;$("#hE .hpnum").textContent=`${e.hp}/${e.max}`;
+  $("#hE .name").textContent=F.foe.n;$("#hE .port").classList.toggle("boss",!!F.foe.boss);$("#hE .bar i").style.transform=`scaleX(${e.hp/e.max})`;$("#hE .hpnum").textContent=`${e.hp}/${e.max}`;
   $("#hE .bar u").style.width=Math.min(100,e.shield/e.max*100)+"%";$("#hE .chips").innerHTML=chipsE();
   $("#depthL").textContent="TIEFE "+P.depth;$("#fightL").textContent=(run.idx+1)+"/"+ENEMIES.length;$("#roundL").textContent="ZUG "+(F.round+1);
   drawChains(cur);
@@ -1003,7 +1020,7 @@ function drawGear(){
   for(const l in G.leg)h+=`<div class="lg"><span>${LEG[l][1]}</span><em>${LEG[l][2]}</em></div>`;
   $("#gSum").innerHTML=h||'<p class="note">Noch keine Werte durch Ausrüstung.</p>';
 }
-$("#portImg").src=MAGE.portrait;$("#frmH").src=IMG.ui_fr_hero;$("#foeImg").src=IMG.sp_rage;$("#dollImg").src=MAGE.front;
+$("#portImg").src=MAGE.portrait;$("#foeImg").src=IMG.sp_rage;$("#dollImg").src=MAGE.front;
 $("#bGear").onclick=()=>{gSel=null;drawGear();$("#gear").classList.add("on");};
 $("#bGearX").onclick=()=>{$("#gear").classList.remove("on");openPrep();};
 $("#bSet").onclick=()=>{drawSet();$("#set").classList.add("on");};
